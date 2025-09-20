@@ -4,7 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login | Shift Management System</title>
-<script src="users.js"></script>
+<script>
+// Mock users data (normally in users.js)
+const users = [
+  { username: "admin", password: "admin123", name: "System Administrator", Level: "Admin" },
+  { username: "manager", password: "manager123", name: "Shift Manager", Level: "Manager" },
+  { username: "koveli", password: "koveli123", name: "Koveli", Level: "User" },
+  { username: "supervisor", password: "super123", name: "Supervisor", Level: "Supervisor" }
+];
+</script>
 <style>
 :root {
   --primary: #4361ee;
@@ -214,6 +222,9 @@ button:active {
 </div>
 
 <script>
+// Load Font Awesome for icons
+document.head.innerHTML += '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">';
+
 const loginBtn = document.getElementById("loginBtn");
 const errorMsg = document.getElementById("errorMsg");
 const errorText = document.getElementById("errorText");
@@ -262,7 +273,8 @@ loginBtn.addEventListener("click", () => {
     
     // Redirect to dashboard after a brief delay
     setTimeout(() => {
-      window.location.href = "dashboard.html";
+      // For demonstration, we'll show the dashboard in this same page
+      showDashboard();
     }, 1000);
   } else {
     errorText.textContent = "Invalid username or password!";
@@ -271,7 +283,421 @@ loginBtn.addEventListener("click", () => {
     setTimeout(() => loginBtn.classList.remove('shake'), 500);
   }
 });
-</script>
 
+// Function to show dashboard (for demonstration purposes)
+function showDashboard() {
+  document.body.innerHTML = `
+    <div class="container">
+      <div class="header">
+        <h1><i class="fas fa-business-time"></i> Shift Management System</h1>
+        <p>Welcome, ${sessionStorage.getItem("userName")}!</p>
+      </div>
+      
+      <div class="dashboard">
+        <div class="card">
+          <div class="card-header">
+            <i class="fas fa-user-clock"></i>
+            <h2>Current User</h2>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Logged in as</span>
+            <span class="detail-value">${sessionStorage.getItem("userName")}</span>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <i class="fas fa-user-tag"></i>
+            <h2>User Level</h2>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Permission level</span>
+            <span class="detail-value">${sessionStorage.getItem("userLevel")}</span>
+          </div>
+        </div>
+        
+        <div class="card current-shift-card">
+          <div class="shift-status">
+            <span class="status-badge closed">Closed</span>
+            <div>No active shift</div>
+          </div>
+          <div class="shift-details">
+            <div class="detail-item">
+              <span class="detail-label">Current Status</span>
+              <span class="detail-value">No active shift</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Last Activity</span>
+              <span class="detail-value">-</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="action-buttons">
+        <button class="btn btn-success">
+          <i class="fas fa-door-open"></i> Open New Shift
+        </button>
+        <button class="btn btn-danger" disabled>
+          <i class="fas fa-door-closed"></i> Close Current Shift
+        </button>
+      </div>
+      
+      <div class="shifts-table-container">
+        <div class="table-header">
+          <i class="fas fa-history"></i>
+          <h2>Shift History</h2>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Shift No</th>
+              <th>Status</th>
+              <th>User</th>
+              <th>Start Time</th>
+              <th>End Time</th>
+              <th>Duration</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="6" class="empty-state">
+                <i class="fas fa-clipboard-list"></i>
+                <p>No shifts recorded yet</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="footer">
+        <p>Shift Management System © 2023 | Designed for efficient workforce management</p>
+      </div>
+    </div>
+    
+    <style>
+    :root {
+      --primary: #4361ee;
+      --primary-light: #eef0ff;
+      --secondary: #3a0ca3;
+      --success: #28a745;
+      --success-light: #e8f5e9;
+      --danger: #dc3545;
+      --danger-light: #ffebee;
+      --warning: #ffca2c;
+      --info: #17a2b8;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --gray: #6c757d;
+      --light-gray: #e9ecef;
+      --border-radius: 12px;
+      --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
+      padding: 20px;
+      min-height: 100vh;
+      color: var(--dark);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Header Styles */
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 25px;
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--card-shadow);
+    }
+
+    .header h1 {
+      color: var(--primary);
+      font-size: 2.2rem;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .header p {
+      color: var(--gray);
+      font-size: 1.1rem;
+    }
+
+    /* Dashboard Cards */
+    .dashboard {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: white;
+      border-radius: var(--border-radius);
+      padding: 24px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 12px;
+    }
+
+    .card-header i {
+      font-size: 1.5rem;
+      color: var(--primary);
+    }
+
+    .card-header h2 {
+      font-size: 1.4rem;
+      color: var(--dark);
+    }
+
+    /* Current Shift Card */
+    .current-shift-card {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .shift-status {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .status-badge {
+      padding: 8px 16px;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .status-badge.open {
+      background-color: rgba(40, 167, 69, 0.15);
+      color: var(--success);
+    }
+
+    .status-badge.closed {
+      background-color: rgba(220, 53, 69, 0.15);
+      color: var(--danger);
+    }
+
+    .shift-details {
+      display: flex;
+      gap: 25px;
+      flex-wrap: wrap;
+    }
+
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .detail-label {
+      font-size: 0.85rem;
+      color: var(--gray);
+      font-weight: 500;
+    }
+
+    .detail-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--dark);
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+      justify-content: center;
+    }
+
+    .btn {
+      padding: 14px 28px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: var(--transition);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-success {
+      background: var(--success);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+    }
+
+    .btn:disabled {
+      background: var(--light-gray);
+      color: var(--gray);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* Shifts Table */
+    .shifts-table-container {
+      background: white;
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 30px;
+    }
+
+    .table-header {
+      padding: 20px;
+      background: var(--light);
+      border-bottom: 1px solid var(--light-gray);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .table-header h2 {
+      color: var(--dark);
+      font-size: 1.4rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 16px 20px;
+      text-align: left;
+      border-bottom: 1px solid var(--light-gray);
+    }
+
+    th {
+      background: var(--light);
+      font-weight: 600;
+      color: var(--dark);
+      position: sticky;
+      top: 0;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover {
+      background-color: rgba(67, 97, 238, 0.03);
+    }
+
+    .status-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .status-dot.open {
+      background-color: var(--success);
+    }
+
+    .status-dot.closed {
+      background-color: var(--danger);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+      
+      .current-shift-card {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .action-buttons {
+        flex-direction: column;
+      }
+      
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .shifts-table-container {
+        overflow-x: auto;
+      }
+      
+      table {
+        min-width: 600px;
+      }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: var(--gray);
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      margin-bottom: 15px;
+      color: var(--light-gray);
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      color: var(--gray);
+      font-size: 0.9rem;
+    }
+    </style>
+  `;
+}
+</script>
 </body>
 </html>
