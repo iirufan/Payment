@@ -3,35 +3,251 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login</title>
-<script src="user.js"></script>
+<title>Login | Shift Management System</title>
+<script src="users.js"></script>
 <style>
-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-.login-container { background: #fff; padding: 30px 40px; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.1); width: 300px; }
-h2 { text-align: center; margin-bottom: 20px; color: #4361ee; }
-input { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #ccc; }
-button { width: 100%; padding: 10px; border: none; border-radius: 6px; background: #28a745; color: white; font-size: 16px; cursor: pointer; }
-button:hover { background: #218838; }
-.error { color: red; text-align: center; margin-bottom: 10px; }
+:root {
+  --primary: #4361ee;
+  --primary-gradient: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+  --success: #28a745;
+  --danger: #dc3545;
+  --light: #f8f9fa;
+  --dark: #212529;
+  --gray: #6c757d;
+  --light-gray: #e9ecef;
+  --border-radius: 12px;
+  --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--light);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(67, 97, 238, 0.1) 0%, transparent 25%),
+    radial-gradient(circle at 85% 30%, rgba(58, 12, 163, 0.1) 0%, transparent 25%);
+}
+
+.login-container {
+  background: #fff;
+  padding: 40px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: var(--primary-gradient);
+}
+
+.logo {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.logo i {
+  font-size: 3rem;
+  color: var(--primary);
+  margin-bottom: 15px;
+}
+
+.logo h1 {
+  font-size: 1.8rem;
+  color: var(--dark);
+  margin-bottom: 5px;
+}
+
+.logo p {
+  color: var(--gray);
+  font-size: 1rem;
+}
+
+.input-group {
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.input-group i {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gray);
+}
+
+.input-group input {
+  width: 100%;
+  padding: 15px 15px 15px 45px;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--light-gray);
+  font-size: 1rem;
+  transition: var(--transition);
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+}
+
+button {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: var(--border-radius);
+  background: var(--primary-gradient);
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+.error {
+  color: var(--danger);
+  text-align: center;
+  margin-bottom: 20px;
+  padding: 12px;
+  background-color: rgba(220, 53, 69, 0.1);
+  border-radius: var(--border-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.footer {
+  text-align: center;
+  margin-top: 30px;
+  color: var(--gray);
+  font-size: 0.9rem;
+}
+
+/* Animation */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.shake {
+  animation: shake 0.5s;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .login-container {
+    padding: 30px 20px;
+  }
+  
+  .logo h1 {
+    font-size: 1.5rem;
+  }
+}
 </style>
 </head>
 <body>
 
 <div class="login-container">
-  <h2>Login</h2>
-  <div class="error" id="errorMsg"></div>
-  <input type="text" id="username" placeholder="Username" />
-  <input type="password" id="password" placeholder="Password" />
-  <button id="loginBtn">Login</button>
+  <div class="logo">
+    <i class="fas fa-lock"></i>
+    <h1>Shift Management System</h1>
+    <p>Sign in to access your account</p>
+  </div>
+  
+  <div class="error" id="errorMsg">
+    <i class="fas fa-exclamation-circle"></i>
+    <span id="errorText"></span>
+  </div>
+  
+  <div class="input-group">
+    <i class="fas fa-user"></i>
+    <input type="text" id="username" placeholder="Username" />
+  </div>
+  
+  <div class="input-group">
+    <i class="fas fa-key"></i>
+    <input type="password" id="password" placeholder="Password" />
+  </div>
+  
+  <button id="loginBtn">
+    <i class="fas fa-sign-in-alt"></i>
+    Sign In
+  </button>
+  
+  <div class="footer">
+    <p>© 2023 Shift Management System</p>
+  </div>
 </div>
 
 <script>
 const loginBtn = document.getElementById("loginBtn");
 const errorMsg = document.getElementById("errorMsg");
+const errorText = document.getElementById("errorText");
+const usernameInput = document.getElementById("username");
+const passwordInput = document.getElementById("password");
+
+// Initially hide error message
+errorMsg.style.display = 'none';
+
+// Add enter key support
+passwordInput.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    loginBtn.click();
+  }
+});
+
+usernameInput.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    passwordInput.focus();
+  }
+});
 
 loginBtn.addEventListener("click", () => {
-  const username = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value.trim();
+  const username = usernameInput.value.trim();
+  const password = passwordInput.value.trim();
+
+  // Basic validation
+  if (!username || !password) {
+    errorText.textContent = "Please enter both username and password!";
+    errorMsg.style.display = 'flex';
+    loginBtn.classList.add('shake');
+    setTimeout(() => loginBtn.classList.remove('shake'), 500);
+    return;
+  }
 
   const user = users.find(u => u.username === username && u.password === password);
   if (user) {
@@ -40,10 +256,19 @@ loginBtn.addEventListener("click", () => {
     sessionStorage.setItem("userLevel", user.Level);
     sessionStorage.setItem("username", user.username);
 
-    // Redirect to dashboard
-    window.location.href = "dashboard.html";
+    // Add success feedback
+    loginBtn.innerHTML = '<i class="fas fa-check"></i> Success! Redirecting...';
+    loginBtn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+    
+    // Redirect to dashboard after a brief delay
+    setTimeout(() => {
+      window.location.href = "dashboard.html";
+    }, 1000);
   } else {
-    errorMsg.textContent = "Invalid username or password!";
+    errorText.textContent = "Invalid username or password!";
+    errorMsg.style.display = 'flex';
+    loginBtn.classList.add('shake');
+    setTimeout(() => loginBtn.classList.remove('shake'), 500);
   }
 });
 </script>
