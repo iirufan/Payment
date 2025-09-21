@@ -1,579 +1,214 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard</title>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-  <script src="fire2.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    
-    body {
-      background: #f5f7fa;
-      color: #333;
-      padding: 0;
-    }
-    
-    .dashboard-container {
-      display: flex;
-      min-height: 100vh;
-    }
-    
-    /* Sidebar Styles */
-    .sidebar {
-      width: 250px;
-      background: linear-gradient(to bottom, #2c3e50, #34495e);
-      color: white;
-      padding: 20px 0;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .logo {
-      padding: 0 20px 20px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      margin-bottom: 20px;
-    }
-    
-    .logo h2 {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    
-    .logo h2 i {
-      color: #3498db;
-    }
-    
-    .user-info {
-      padding: 0 20px;
-      margin-bottom: 30px;
-    }
-    
-    .user-info p {
-      margin: 5px 0;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .level-badge {
-      background: #3498db;
-      padding: 3px 8px;
-      border-radius: 20px;
-      font-size: 12px;
-    }
-    
-    .nav-links {
-      flex-grow: 1;
-    }
-    
-    .nav-item {
-      display: flex;
-      align-items: center;
-      padding: 12px 20px;
-      color: #ecf0f1;
-      text-decoration: none;
-      transition: all 0.3s;
-      gap: 12px;
-    }
-    
-    .nav-item:hover, .nav-item.active {
-      background: rgba(52, 152, 219, 0.2);
-      border-left: 4px solid #3498db;
-    }
-    
-    .logout-btn {
-      margin-top: auto;
-      padding: 15px 20px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      cursor: pointer;
-      color: #e74c3c;
-      border-top: 1px solid rgba(255,255,255,0.1);
-    }
-    
-    .logout-btn:hover {
-      background: rgba(231, 76, 60, 0.1);
-    }
-    
-    /* Main Content Styles */
-    .main-content {
-      flex: 1;
-      padding: 30px;
-      overflow-y: auto;
-    }
-    
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
-    }
-    
-    .header h1 {
-      color: #2c3e50;
-      font-weight: 600;
-    }
-    
-    .date-display {
-      color: #7f8c8d;
-      font-size: 14px;
-    }
-    
-    /* Quick Actions - Moved to top */
-    .quick-actions-section {
-      margin-bottom: 30px;
-    }
-    
-    .section-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 20px;
-      color: #2c3e50;
-    }
-    
-    .section-title i {
-      color: #3498db;
-    }
-    
-    .actions-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-    
-    .action-card {
-      background: white;
-      border-radius: 12px;
-      padding: 25px;
-      text-align: center;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-      transition: transform 0.3s, box-shadow 0.3s;
-      cursor: pointer;
-    }
-    
-    .action-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-    }
-    
-    .action-icon {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 15px;
-      font-size: 24px;
-      color: white;
-    }
-    
-    .payment-icon {
-      background: #3498db;
-    }
-    
-    .update-icon {
-      background: #2ecc71;
-    }
-    
-    .void-icon {
-      background: #e74c3c;
-    }
-    
-    .shift-icon-main {
-      background: #9b59b6;
-    }
-    
-    .cashier-icon {
-      background: #f39c12;
-    }
-    
-    .action-title {
-      font-weight: 600;
-      color: #2c3e50;
-      margin-bottom: 5px;
-    }
-    
-    .action-description {
-      color: #7f8c8d;
-      font-size: 13px;
-    }
-    
-    /* Stats Overview */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-    
-    .stat-card {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .stat-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-    
-    .stat-title {
-      color: #7f8c8d;
-      font-size: 14px;
-      font-weight: 500;
-    }
-    
-    .stat-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-    }
-    
-    .shift-icon {
-      background: #3498db;
-    }
-    
-    .transaction-icon {
-      background: #2ecc71;
-    }
-    
-    .pending-icon {
-      background: #f39c12;
-    }
-    
-    .stat-value {
-      font-size: 28px;
-      font-weight: 700;
-      color: #2c3e50;
-      margin-bottom: 5px;
-    }
-    
-    .stat-description {
-      color: #95a5a6;
-      font-size: 14px;
-    }
-    
-    .notification-alert {
-      background: #fff4e6;
-      border-left: 4px solid #f39c12;
-      padding: 15px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      margin-bottom: 30px;
-    }
-    
-    .notification-icon {
-      color: #f39c12;
-      font-size: 24px;
-    }
-    
-    .notification-content h3 {
-      color: #d35400;
-      margin-bottom: 5px;
-    }
-    
-    .notification-content p {
-      color: #e67e22;
-      font-size: 14px;
-    }
-    
-    @media (max-width: 992px) {
-      .dashboard-container {
-        flex-direction: column;
-      }
-      
-      .sidebar {
-        width: 100%;
-        padding: 15px;
-      }
-      
-      .nav-links {
-        display: flex;
-        overflow-x: auto;
-        gap: 5px;
-        margin-bottom: 15px;
-      }
-      
-      .nav-item {
-        padding: 10px 15px;
-        border-radius: 8px;
-        white-space: nowrap;
-      }
-      
-      .logout-btn {
-        margin-top: 0;
-        border-top: none;
-        border-left: 1px solid rgba(255,255,255,0.1);
-        justify-content: center;
-      }
-    }
-    
-    @media (max-width: 768px) {
-      .main-content {
-        padding: 20px 15px;
-      }
-      
-      .stats-grid,
-      .actions-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Cash & Petty Cash Management</title>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="fire2.js"></script> <!-- Firebase config -->
+<style>
+body { font-family: Arial, sans-serif; padding: 20px; }
+h2 { margin-bottom: 10px; }
+.tables { display: flex; gap: 40px; margin-bottom: 30px; flex-wrap: wrap; }
+table { border-collapse: collapse; width: 250px; margin-bottom: 20px; }
+th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+th { background-color: #f2f2f2; }
+input[type=number] { width: 60px; text-align: center; }
+.total-row { font-weight: bold; }
+.card { border: 1px solid #ccc; padding: 20px; border-radius: 10px; margin-bottom: 20px; max-width: 400px; }
+.summary { border: 1px solid #999; padding: 15px; margin-top: 20px; max-width: 500px; }
+button { padding: 8px 12px; margin-top: 5px; }
+</style>
 </head>
 <body>
-  <div class="dashboard-container">
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <div class="logo">
-        <h2><i class="fas fa-chart-line"></i> Dashboard</h2>
-      </div>
-      
-      <div class="user-info">
-        <p><i class="fas fa-user"></i> <span id="sidebarUsername">Username</span></p>
-        <p><i class="fas fa-star"></i> Level: <span class="level-badge" id="sidebarLevel">Level</span></p>
-      </div>
-      
-      <div class="nav-links">
-        <a href="#" class="nav-item active">
-          <i class="fas fa-home"></i> Overview
-        </a>
-        <a href="newpayment.html" class="nav-item">
-          <i class="fas fa-plus-circle"></i> New Payment
-        </a>
-        <a href="updatePayments.html" class="nav-item">
-          <i class="fas fa-edit"></i> Update Payment
-        </a>
-        <a href="edit_payments.html" class="nav-item">
-          <i class="fas fa-ban"></i> Void
-        </a>
-        <a href="shiftmanagement.html" class="nav-item">
-          <i class="fas fa-clock"></i> Shift Management
-        </a>
-        <a href="cashiermanagement.html" class="nav-item">
-          <i class="fas fa-users"></i> Cashier Management
-        </a>
-      </div>
-      
-      <div class="logout-btn" onclick="logout()">
-        <i class="fas fa-sign-out-alt"></i> Logout
-      </div>
-    </div>
-    
-    <!-- Main Content -->
-    <div class="main-content">
-      <div class="header">
-        <h1>Dashboard Overview</h1>
-        <div class="date-display" id="currentDate"></div>
-      </div>
-      
-      <!-- Quick Actions - Moved to top -->
-      <div class="quick-actions-section">
-        <div class="section-title">
-          <i class="fas fa-bolt"></i>
-          <h2>Quick Actions</h2>
-        </div>
-        
-        <div class="actions-grid">
-          <div class="action-card" onclick="location.href='newpayment.html'">
-            <div class="action-icon payment-icon">
-              <i class="fas fa-plus-circle"></i>
-            </div>
-            <div class="action-title">New Payment</div>
-            <div class="action-description">Create a new payment transaction</div>
-          </div>
-          
-          <div class="action-card" onclick="location.href='updatePayments.html'">
-            <div class="action-icon update-icon">
-              <i class="fas fa-edit"></i>
-            </div>
-            <div class="action-title">Update Payment</div>
-            <div class="action-description">Modify existing payments</div>
-          </div>
-          
-          <div class="action-card" onclick="location.href='edit_payments.html'">
-            <div class="action-icon void-icon">
-              <i class="fas fa-ban"></i>
-            </div>
-            <div class="action-title">Void</div>
-            <div class="action-description">Cancel or void transactions</div>
-          </div>
-          
-          <div class="action-card" onclick="location.href='shiftmanagement.html'">
-            <div class="action-icon shift-icon-main">
-              <i class="fas fa-clock"></i>
-            </div>
-            <div class="action-title">Shift Management</div>
-            <div class="action-description">Manage working shifts</div>
-          </div>
-          
-          <div class="action-card" onclick="location.href='cashiermanagement.html'">
-            <div class="action-icon cashier-icon">
-              <i class="fas fa-users"></i>
-            </div>
-            <div class="action-title">Cashier Management</div>
-            <div class="action-description">Manage cashier accounts</div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Stats Overview -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-header">
-            <div class="stat-title">CURRENT SHIFT</div>
-            <div class="stat-icon shift-icon">
-              <i class="fas fa-clock"></i>
-            </div>
-          </div>
-          <div class="stat-value" id="currentShift">Loading...</div>
-          <div class="stat-description">Active shift status</div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-header">
-            <div class="stat-title">TOTAL TRANSACTIONS</div>
-            <div class="stat-icon transaction-icon">
-              <i class="fas fa-receipt"></i>
-            </div>
-          </div>
-          <div class="stat-value" id="totalTransactions">Loading...</div>
-          <div class="stat-description">Today's transactions</div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-header">
-            <div class="stat-title">PENDING UPDATES</div>
-            <div class="stat-icon pending-icon">
-              <i class="fas fa-exclamation-circle"></i>
-            </div>
-          </div>
-          <div class="stat-value" id="pendingCount">0</div>
-          <div class="stat-description">Require attention</div>
-        </div>
-      </div>
-      
-      <!-- Notification Alert -->
-      <div class="notification-alert" id="pendingNotification" style="display: none;">
-        <div class="notification-icon">
-          <i class="fas fa-exclamation-triangle"></i>
-        </div>
-        <div class="notification-content">
-          <h3>Action Required</h3>
-          <p id="notificationText"></p>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <script>
-    // Set current date
-    const now = new Date();
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
-    
-    // Check if user is logged in
-    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+<h2>Shift & Date Info</h2>
+<p>Current Date: <span id="currentDate">Loading...</span></p>
+<p>Current Shift No: <span id="shiftNo">Loading...</span></p>
 
-    if (user) {
-      document.getElementById("sidebarUsername").textContent = user.username;
-      document.getElementById("sidebarLevel").textContent = user.Level;
-    } else {
-      window.location.href = "login.html";
-    }
+<h2>Cash Payments from Firebase</h2>
+<p>Total USD Cash: <span id="totalUSD">Loading...</span></p>
+<p>Total MVR Cash: <span id="totalMVR">Loading...</span></p>
 
-    function logout() {
-      localStorage.removeItem("loggedInUser");
-      window.location.href = "login.html";
-    }
+<div class="tables">
+  <table id="usdTable">
+    <thead><tr><th>Denomination USD</th><th>Count</th><th>Total</th></tr></thead>
+    <tbody></tbody>
+    <tfoot><tr class="total-row"><td colspan="2">Grand Total</td><td id="usdGrandTotal">0.00</td></tr></tfoot>
+  </table>
+  <table id="mvrTable">
+    <thead><tr><th>Denomination MVR</th><th>Count</th><th>Total</th></tr></thead>
+    <tbody></tbody>
+    <tfoot><tr class="total-row"><td colspan="2">Grand Total</td><td id="mvrGrandTotal">0.00</td></tr></tfoot>
+  </table>
+</div>
 
-    // 🔹 Firestore references
-    const shiftsRef = db.collection("shifts");
-    const paymentsRef = db.collection("payments"); // updated collection name
+<div class="card">
+  <h2>Petty Cash (Live)</h2>
+  <p>USD: <span id="pettyUSD">Loading...</span></p>
+  <p>MVR: <span id="pettyMVR">Loading...</span></p>
+</div>
 
-    let currentShiftName = null;
+<div class="tables">
+  <table id="pettyUSDTable">
+    <thead><tr><th>Denomination USD</th><th>Count</th><th>Total</th></tr></thead>
+    <tbody></tbody>
+    <tfoot><tr class="total-row"><td colspan="2">Grand Total</td><td id="pettyUSDGrandTotal">0.00</td></tr></tfoot>
+  </table>
+  <table id="pettyMVRTable">
+    <thead><tr><th>Denomination MVR</th><th>Count</th><th>Total</th></tr></thead>
+    <tbody></tbody>
+    <tfoot><tr class="total-row"><td colspan="2">Grand Total</td><td id="pettyMVRGrandTotal">0.00</td></tr></tfoot>
+  </table>
+</div>
 
-    // 🔹 Get current shift
-    shiftsRef.where("status", "==", "open").onSnapshot(snapshot => {
-      if (!snapshot.empty) {
-        const doc = snapshot.docs[0].data();
-        currentShiftName = "Shift1"; // always display Shift1
-        document.getElementById("currentShift").textContent = "Shift 1";
-        loadPayments(); // reload payments when shift is known
-      } else {
-        currentShiftName = null;
-        document.getElementById("currentShift").textContent = "No shift open";
-        document.getElementById("totalTransactions").textContent = "0";
-      }
-    });
+<div class="summary">
+  <h2>Reconciliation Summary</h2>
+  <p>Total Cash USD: <span id="totalCashUSD">0.00</span></p>
+  <p>Total Cash MVR: <span id="totalCashMVR">0.00</span></p>
+  <p>Total Petty Cash USD: <span id="totalPettyUSD">0.00</span></p>
+  <p>Total Petty Cash MVR: <span id="totalPettyMVR">0.00</span></p>
+  <p>Grand Total USD: <span id="grandTotalUSD">0.00</span></p>
+  <p>Grand Total MVR: <span id="grandTotalMVR">0.00</span></p>
+</div>
 
-    // 🔹 Load today's payments for current shift
-    function loadPayments() {
-      if (!currentShiftName) return;
+<div class="card">
+  <h2>Cashier Status</h2>
+  <p>Logged in User: <span id="sidebarUsername">Loading...</span></p>
+  <p>Level: <span id="sidebarLevel">Loading...</span></p>
+  <button id="cashierBtn" disabled>Open / Close Cashier</button>
+  <p id="cashierMsg"></p>
+</div>
 
-      // Get today's date in YYYY-MM-DD format
-      const today = new Date().toISOString().split("T")[0];
+<script>
+// ===== Denominations =====
+const usdDenoms = [100,50,20,10,5,1];
+const mvrDenoms = [1000,500,100,50,20,5,1];
 
-      paymentsRef.where("date", "==", today)
-        .where("shift", "==", "Morning") // Adjust if shift field matches your naming
-        .onSnapshot(snapshot => {
-          const payments = [];
-          snapshot.forEach(doc => payments.push(doc.data()));
+function createDenominationTable(denoms, tbodySelector, grandTotalSelector){
+  const tbody = document.querySelector(tbodySelector);
+  const grandEl = document.querySelector(grandTotalSelector);
+  function updateGrandTotal(){
+    let total=0;
+    document.querySelectorAll(`${tbodySelector} .row-total`).forEach(c=>{total+=Number(c.textContent)});
+    grandEl.textContent = total.toFixed(2);
+    updateSummary();
+  }
+  denoms.forEach(v=>{
+    const row = document.createElement("tr");
+    const tdDenom=document.createElement("td"); tdDenom.textContent=v; row.appendChild(tdDenom);
+    const tdCount=document.createElement("td"); const input=document.createElement("input"); input.type="number"; input.min=0; input.value=0; tdCount.appendChild(input); row.appendChild(tdCount);
+    const tdTotal=document.createElement("td"); tdTotal.classList.add("row-total"); tdTotal.textContent="0.00"; row.appendChild(tdTotal);
+    input.addEventListener("input",()=>{tdTotal.textContent=((Number(input.value)||0)*v).toFixed(2); updateGrandTotal();});
+    tbody.appendChild(row);
+  });
+}
 
-          // Total count
-          document.getElementById("totalTransactions").textContent = payments.length;
+createDenominationTable(usdDenoms,"#usdTable tbody","#usdGrandTotal");
+createDenominationTable(mvrDenoms,"#mvrTable tbody","#mvrGrandTotal");
+createDenominationTable(usdDenoms,"#pettyUSDTable tbody","#pettyUSDGrandTotal");
+createDenominationTable(mvrDenoms,"#pettyMVRTable tbody","#pettyMVRGrandTotal");
 
-          // Pending = card type or missing batch/approval code for non-cash payments
-          const pending = payments.filter(b =>
-            b.paymentType && (
-              b.paymentType.toLowerCase() === "card" ||
-              (b.paymentType.toLowerCase() !== "cash" && (!b.batchNo || !b.approvalCode))
-            )
-          );
-          
-          document.getElementById("pendingCount").textContent = pending.length;
-          
-          const notif = document.getElementById("pendingNotification");
-          const notifText = document.getElementById("notificationText");
-          
-          if (pending.length > 0) {
-            notif.style.display = "flex";
-            notifText.textContent = `You have ${pending.length} pending payment(s) that require approval code or batch number.`;
-          } else {
-            notif.style.display = "none";
-          }
-        });
-    }
-  </script>
+// ===== Current Date =====
+const today=new Date();
+const yyyy=today.getFullYear(), mm=String(today.getMonth()+1).padStart(2,'0'), dd=String(today.getDate()).padStart(2,'0');
+const currentDate=`${yyyy}-${mm}-${dd}`;
+document.getElementById("currentDate").textContent=currentDate;
+
+// ===== Firebase Shift & Sales =====
+const shiftNoSpan = document.getElementById("shiftNo");
+const totalUSDEl = document.getElementById("totalUSD");
+const totalMVREl = document.getElementById("totalMVR");
+
+db.collection("shifts").where("status","==","open").limit(1).onSnapshot(snap=>{
+  if(snap.empty){ shiftNoSpan.textContent="No shift"; totalUSDEl.textContent="0.00"; totalMVREl.textContent="0.00"; return;}
+  const shiftData=snap.docs[0].data();
+  const shiftNo = shiftData.shiftNo;
+  const shiftName = shiftNo===1?"Morning":"Evening";
+  shiftNoSpan.textContent=shiftNo;
+
+  // Cash USD
+  db.collection("payments").where("date","==",currentDate).where("shift","==",shiftName).where("paymentType","==","Cash").where("currency","==","USD")
+    .onSnapshot(paySnap=>{let t=0;paySnap.forEach(d=>{const p=d.data(); if(!p.voided) t+=Number(p.total||0)}); totalUSDEl.textContent=t.toFixed(2); updateSummary();});
+
+  // Cash MVR
+  db.collection("payments").where("date","==",currentDate).where("shift","==",shiftName).where("paymentType","==","Cash").where("currency","==","MVR")
+    .onSnapshot(paySnap=>{let t=0;paySnap.forEach(d=>{const p=d.data(); if(!p.voided) t+=Number(p.total||0)}); totalMVREl.textContent=t.toFixed(2); updateSummary();});
+});
+
+// ===== Petty Cash =====
+const pettyUSDEl = document.getElementById("pettyUSD");
+const pettyMVREl = document.getElementById("pettyMVR");
+db.collection("pettyCash").limit(1).onSnapshot(snap=>{
+  if(!snap.empty){
+    const data = snap.docs[0].data();
+    pettyUSDEl.textContent = Number(data.USD||0).toFixed(2);
+    pettyMVREl.textContent = Number(data.MVR||0).toFixed(2);
+    updateSummary();
+  }
+});
+
+// ===== Reconciliation Summary =====
+function updateSummary(){
+  const totalCashUSD = Number(totalUSDEl.textContent) + Number(document.getElementById("usdGrandTotal").textContent);
+  const totalCashMVR = Number(totalMVREl.textContent) + Number(document.getElementById("mvrGrandTotal").textContent);
+  const totalPettyUSD = Number(pettyUSDEl.textContent) + Number(document.getElementById("pettyUSDGrandTotal").textContent);
+  const totalPettyMVR = Number(pettyMVREl.textContent) + Number(document.getElementById("pettyMVRGrandTotal").textContent);
+
+  document.getElementById("totalCashUSD").textContent = totalCashUSD.toFixed(2);
+  document.getElementById("totalCashMVR").textContent = totalCashMVR.toFixed(2);
+  document.getElementById("totalPettyUSD").textContent = totalPettyUSD.toFixed(2);
+  document.getElementById("totalPettyMVR").textContent = totalPettyMVR.toFixed(2);
+  document.getElementById("grandTotalUSD").textContent = (totalCashUSD + totalPettyUSD).toFixed(2);
+  document.getElementById("grandTotalMVR").textContent = (totalCashMVR + totalPettyMVR).toFixed(2);
+}
+
+// ===== Logged-in User (from login page) =====
+const user = JSON.parse(localStorage.getItem("loggedInUser")) || {username:"Unknown", Level:"User"};
+document.getElementById("sidebarUsername").textContent = user.username;
+document.getElementById("sidebarLevel").textContent = user.Level;
+
+// ===== Cashier Open/Close =====
+const cashierBtn = document.getElementById("cashierBtn");
+const cashierMsg = document.getElementById("cashierMsg");
+let currentStatus = "closed";
+
+function checkTotalsTally(){
+  const totalCashUSD = Number(document.getElementById("totalUSD").textContent);
+  const totalCashMVR = Number(document.getElementById("totalMVR").textContent);
+  const denomUSD = Number(document.getElementById("usdGrandTotal").textContent);
+  const denomMVR = Number(document.getElementById("mvrGrandTotal").textContent);
+  const pettyUSD = Number(document.getElementById("pettyUSD").textContent);
+  const pettyMVR = Number(document.getElementById("pettyMVR").textContent);
+  const pettyUSDCount = Number(document.getElementById("pettyUSDGrandTotal").textContent);
+  const pettyMVRCount = Number(document.getElementById("pettyMVRGrandTotal").textContent);
+
+  if( totalCashUSD + denomUSD === pettyUSD + pettyUSDCount && totalCashMVR + denomMVR === pettyMVR + pettyMVRCount ){
+    cashierBtn.disabled = false;
+  } else { cashierBtn.disabled = true; }
+}
+
+// Watch totals
+["usdGrandTotal","mvrGrandTotal","pettyUSDGrandTotal","pettyMVRGrandTotal"].forEach(id=>{
+  document.getElementById(id).addEventListener("DOMSubtreeModified", checkTotalsTally);
+});
+["totalUSD","totalMVR","pettyUSD","pettyMVR"].forEach(id=>{
+  const el = document.getElementById(id);
+  const observer = new MutationObserver(checkTotalsTally);
+  observer.observe(el,{childList:true});
+});
+
+cashierBtn.addEventListener("click",()=>{
+  const newStatus = currentStatus==="open"?"closed":"open";
+  db.collection("pettyCash").doc("current").set({
+    currentCashier: user.username,
+    cashierStatus: newStatus
+  },{merge:true}).then(()=>{
+    cashierMsg.textContent = "Cashier " + newStatus;
+    currentStatus = newStatus;
+    cashierBtn.textContent = newStatus==="open"?"Close Cashier":"Open Cashier";
+  }).catch(err=>{console.error(err); cashierMsg.textContent="Error updating cashier status";});
+});
+</script>
 </body>
 </html>
