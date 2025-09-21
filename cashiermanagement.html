@@ -2,78 +2,162 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Current Shift Cash Payments</title>
+  <title>Cash Denomination Count (USD & MVR)</title>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
   <script src="fire2.js"></script> <!-- your firebase config -->
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
-    .card { border: 1px solid #ccc; padding: 20px; border-radius: 10px; max-width: 400px; }
-    .title { font-size: 20px; font-weight: bold; margin-bottom: 10px; }
+    h2 { margin-bottom: 10px; }
+    .tables { display: flex; gap: 40px; margin-top: 20px; }
+    table { border-collapse: collapse; width: 250px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background-color: #f2f2f2; }
+    input[type=number] { width: 60px; text-align: center; }
+    .total-row { font-weight: bold; }
+    .firebase-total { margin-bottom: 10px; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="title">Current Shift Cash Payments</div>
-    <p>Current Date: <span id="currentDate">Loading...</span></p>
-    <p>Current Shift No: <span id="shiftNo">Loading...</span></p>
-    <p>Total Cash Payments (after voids): <span id="totalPayments">Loading...</span></p>
-  </div>
 
-  <script>
-    // Get today's date in YYYY-MM-DD format
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    const currentDate = `${yyyy}-${mm}-${dd}`;
+<h2>Current Shift Cash Payments</h2>
+<p class="firebase-total">Total Cash USD (from Firebase): <span id="totalUSD">Loading...</span></p>
+<p class="firebase-total">Total Cash MVR (from Firebase): <span id="totalMVR">Loading...</span></p>
 
-    document.getElementById("currentDate").textContent = currentDate;
+<div class="tables">
+  <!-- USD Table -->
+  <table id="usdTable">
+    <thead>
+      <tr><th>Denomination (USD)</th><th>Count</th><th>Total</th></tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot>
+      <tr class="total-row">
+        <td colspan="2">Grand Total</td>
+        <td id="usdGrandTotal">0.00</td>
+      </tr>
+    </tfoot>
+  </table>
 
-    const shiftNoSpan = document.getElementById("shiftNo");
-    const totalSpan = document.getElementById("totalPayments");
+  <!-- MVR Table -->
+  <table id="mvrTable">
+    <thead>
+      <tr><th>Denomination (MVR)</th><th>Count</th><th>Total</th></tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot>
+      <tr class="total-row">
+        <td colspan="2">Grand Total</td>
+        <td id="mvrGrandTotal">0.00</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
 
-    // Fetch the current open shift
-    db.collection("shifts")
-      .where("status", "==", "open")
-      .limit(1)
-      .onSnapshot(snapshot => {
-        if (snapshot.empty) {
-          shiftNoSpan.textContent = "No shift open";
-          totalSpan.textContent = "0.00";
-          return;
-        }
+<script>
+  const usdDenominations = [100, 50, 20, 10, 5, 1];
+  const mvrDenominations = [1000, 500, 100, 50, 20, 5, 1];
 
-        const shiftData = snapshot.docs[0].data();
-        const shiftNo = shiftData.shiftNo;
-        const shiftName = shiftNo === 1 ? "Morning" : "Evening";
+  function createDenominationTable(denominations, tbodySelector, grandTotalSelector) {
+    const tbody = document.querySelector(tbodySelector);
+    const grandTotalEl = document.querySelector(grandTotalSelector);
 
-        shiftNoSpan.textContent = shiftNo;
-
-        // Fetch Cash payments for current date and shift, excluding voided payments
-        db.collection("payments")
-          .where("date", "==", currentDate)
-          .where("shift", "==", shiftName)
-          .where("paymentType", "==", "Cash")
-          .onSnapshot(paySnapshot => {
-            let total = 0;
-            paySnapshot.forEach(doc => {
-              const payment = doc.data();
-              if (!payment.voided) {
-                total += Number(payment.total || 0);
-              }
-            });
-            totalSpan.textContent = total.toFixed(2);
-          }, err => {
-            console.error(err);
-            totalSpan.textContent = "Error fetching payments";
-          });
-
-      }, err => {
-        console.error(err);
-        shiftNoSpan.textContent = "Error fetching shift";
-        totalSpan.textContent = "-";
+    function updateGrandTotal() {
+      let total = 0;
+      document.querySelectorAll(`${tbodySelector} .row-total`).forEach(cell => {
+        total += Number(cell.textContent);
       });
-  </script>
+      grandTotalEl.textContent = total.toFixed(2);
+    }
+
+    denominations.forEach(value => {
+      const row = document.createElement("tr");
+
+      const denomCell = document.createElement("td");
+      denomCell.textContent = value;
+      row.appendChild(denomCell);
+
+      const countCell = document.createElement("td");
+      const input = document.createElement("input");
+      input.type = "number";
+      input.min = 0;
+      input.value = 0;
+      countCell.appendChild(input);
+      row.appendChild(countCell);
+
+      const totalCell = document.createElement("td");
+      totalCell.classList.add("row-total");
+      totalCell.textContent = "0.00";
+      row.appendChild(totalCell);
+
+      input.addEventListener("input", () => {
+        const count = Number(input.value) || 0;
+        totalCell.textContent = (count * value).toFixed(2);
+        updateGrandTotal();
+      });
+
+      tbody.appendChild(row);
+    });
+  }
+
+  // Create both tables
+  createDenominationTable(usdDenominations, "#usdTable tbody", "#usdGrandTotal");
+  createDenominationTable(mvrDenominations, "#mvrTable tbody", "#mvrGrandTotal");
+
+  // Fetch Firebase totals
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  const currentDate = `${yyyy}-${mm}-${dd}`;
+
+  const totalUSDEl = document.getElementById("totalUSD");
+  const totalMVREl = document.getElementById("totalMVR");
+
+  // First get current shift
+  db.collection("shifts").where("status", "==", "open").limit(1)
+    .onSnapshot(snapshot => {
+      if (snapshot.empty) {
+        totalUSDEl.textContent = "0.00";
+        totalMVREl.textContent = "0.00";
+        return;
+      }
+
+      const shiftData = snapshot.docs[0].data();
+      const shiftNo = shiftData.shiftNo;
+      const shiftName = shiftNo === 1 ? "Morning" : "Evening";
+
+      // Fetch USD Cash payments
+      db.collection("payments")
+        .where("date", "==", currentDate)
+        .where("shift", "==", shiftName)
+        .where("paymentType", "==", "Cash")
+        .where("currency", "==", "USD")
+        .onSnapshot(paySnapshot => {
+          let total = 0;
+          paySnapshot.forEach(doc => {
+            const payment = doc.data();
+            if (!payment.voided) total += Number(payment.total || 0);
+          });
+          totalUSDEl.textContent = total.toFixed(2);
+        });
+
+      // Fetch MVR Cash payments
+      db.collection("payments")
+        .where("date", "==", currentDate)
+        .where("shift", "==", shiftName)
+        .where("paymentType", "==", "Cash")
+        .where("currency", "==", "MVR")
+        .onSnapshot(paySnapshot => {
+          let total = 0;
+          paySnapshot.forEach(doc => {
+            const payment = doc.data();
+            if (!payment.voided) total += Number(payment.total || 0);
+          });
+          totalMVREl.textContent = total.toFixed(2);
+        });
+    });
+</script>
+
 </body>
 </html>
