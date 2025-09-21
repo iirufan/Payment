@@ -2,105 +2,219 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>New Payment</title>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-  <script src="fire2.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Entry</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f4f6f9; }
-    h1 { color: #333; }
-    .info-box { background: #fff; padding: 15px; border-radius: 8px; width: 350px; margin-bottom: 20px; box-shadow: 0 0 8px rgba(0,0,0,0.1); }
-    .form-group { margin-bottom: 10px; }
-    label { display: block; margin-bottom: 5px; }
-    input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; }
-    button { padding: 10px 15px; border: none; border-radius: 6px; background: #007BFF; color: white; font-size: 15px; cursor: pointer; }
-    button:hover { background: #0056b3; }
+    /* ==== Variables ==== */
+    :root {
+      --primary: #4361ee;
+      --secondary: #3f37c9;
+      --success: #28a745;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --gray: #6c757d;
+      --border: #dee2e6;
+      --shadow: 0 4px 20px rgba(0,0,0,0.08);
+      --radius: 12px;
+      --transition: all 0.3s ease;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+      color: var(--dark);
+      line-height: 1.6;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    .header { text-align: center; margin-bottom: 30px; }
+    .header h1 { color: var(--primary); font-weight: 700; margin-bottom: 8px; font-size: 28px; }
+    .header p { color: var(--gray); font-size: 16px; }
+
+    /* ==== Card ==== */
+    .card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 25px; }
+    .card-header {
+      background: var(--primary);
+      color: white;
+      padding: 16px 20px;
+      font-weight: 600;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .card-body { padding: 25px; }
+
+    /* ==== Forms ==== */
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--dark); font-size: 14px; }
+    .form-control {
+      width: 100%; padding: 12px 15px;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 15px; background-color: var(--light);
+      transition: var(--transition);
+    }
+    .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15); }
+    .form-control[readonly] { background-color: #f1f3f9; color: var(--gray); }
+
+    .info-badge {
+      display: flex; align-items: center; gap: 10px;
+      background: #f1f3f9; padding: 12px 15px;
+      border-radius: 8px; font-size: 15px;
+    }
+    .info-badge i { color: var(--primary); }
+
+    /* ==== Totals ==== */
+    .totals-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; background: #f8f9fc; padding: 20px; border-radius: var(--radius); }
+    .total-item { text-align: center; }
+    .total-item label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--gray); font-size: 14px; }
+    .total-value { font-size: 20px; font-weight: 700; color: var(--primary); }
+
+    /* ==== Buttons ==== */
+    .btn {
+      display: inline-block; padding: 12px 20px;
+      background: var(--primary); color: white;
+      border: none; border-radius: 8px; font-size: 15px;
+      font-weight: 600; cursor: pointer;
+      transition: var(--transition); text-align: center;
+    }
+    .btn:hover { background: var(--secondary); transform: translateY(-2px); }
+    .btn-full { display: block; width: 100%; padding: 16px; }
+    .btn-success { background: #28a745; }
+    .btn-success:hover { background: #218838; }
+    .btn-secondary { background: #6c757d; }
+    .btn-secondary:hover { background: #5a6268; }
+
+    /* ==== Receipt ==== */
+    #receiptContainer { display: none; margin-top: 30px; }
+    .receipt {
+      width: 80mm; padding: 10px;
+      font-family: 'Courier New', monospace; font-size: 14px;
+      background: white; margin: 0 auto;
+    }
+    .receipt-header { text-align: center; margin-bottom: 15px; border-bottom: 1px dashed #000; padding-bottom: 10px; }
+    .receipt-divider { border-top: 1px dashed #000; margin: 10px 0; }
+    .receipt-total { font-weight: bold; text-transform: uppercase; }
+    .receipt-footer { text-align: center; margin-top: 15px; font-size: 12px; border-top: 1px dashed #000; padding-top: 10px; }
+    .receipt-controls { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
+    @media print {
+      body * { visibility: hidden; }
+      #receiptContainer, #receiptContainer * { visibility: visible; }
+      #receiptContainer { display: block !important; position: absolute; left: 0; top: 0; }
+      .no-print { display: none !important; }
+    }
   </style>
 </head>
 <body>
-  <h1>New Payment</h1>
+  <div class="container">
+    <div class="header">
+      <h1>Payment Entry</h1>
+      <p>Enter passenger details and process payments</p>
+    </div>
 
-  <div class="info-box">
-    <p><strong>Logged in User:</strong> <span id="loginUser">Loading...</span></p>
-    <p><strong>Level:</strong> <span id="userLevel">Loading...</span></p>
-    <p><strong>Current Shift:</strong> <span id="shift">Morning</span></p>
+    <!-- ==== Payment Form ==== -->
+    <form id="paymentForm">
+      <div class="card">
+        <div class="card-header"><i class="fas fa-info-circle"></i> Payment Info</div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Date</label>
+              <input type="date" id="date" class="form-control">
+            </div>
+            <div class="form-group">
+              <label>Login User</label>
+              <div class="info-badge"><i class="fas fa-user"></i><span id="loginUser">-</span></div>
+            </div>
+            <div class="form-group">
+              <label>Selected Shift</label>
+              <div class="info-badge"><i class="fas fa-clock"></i><span id="shift">-</span></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>QR Code</label>
+            <div class="input-icon"><i class="fas fa-qrcode"></i>
+              <input type="text" id="qrCode" class="form-control" placeholder="Scan QR code">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==== Passenger Info ==== -->
+      <div class="card">
+        <div class="card-header"><i class="fas fa-users"></i> Passenger Info</div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group"><label>Name</label><input type="text" id="name" class="form-control"></div>
+            <div class="form-group"><label>Flight</label><input type="text" id="flight" class="form-control"></div>
+            <div class="form-group"><label>Seat</label><input type="text" id="seat" class="form-control"></div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group"><label>Adults</label><input type="number" id="adultCount" class="form-control" value="0"></div>
+            <div class="form-group"><label>Kids</label><input type="number" id="kidCount" class="form-control" value="0"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==== Payment Details ==== -->
+      <div class="card">
+        <div class="card-header"><i class="fas fa-credit-card"></i> Payment Details</div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group"><label>Payment Type</label>
+              <select id="paymentType" class="form-control">
+                <option value="Card">Card</option>
+                <option value="Cash">Cash</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Currency</label>
+              <select id="currency" class="form-control"><option value="USD">USD</option><option value="MVR">MVR</option></select>
+            </div>
+            <div class="form-group"><label>Rate</label>
+              <select id="rate" class="form-control"><option value="A">Rate A</option><option value="B">Rate B</option></select>
+            </div>
+          </div>
+
+          <div id="cashPaymentFields" style="display:none;">
+            <div class="form-group"><label>Paid Amount</label><input type="number" id="paidAmount" class="form-control"></div>
+            <div class="form-group"><label>Balance</label><input type="text" id="balanceAmount" class="form-control" readonly></div>
+          </div>
+
+          <div class="totals-grid">
+            <div class="total-item"><label>Subtotal</label><div id="rateField">$0.00</div></div>
+            <div class="total-item"><label>GST</label><div id="gstField">$0.00</div></div>
+            <div class="total-item"><label>Total</label><div id="totalField">$0.00</div></div>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" id="saveBtn" class="btn btn-full"><i class="fas fa-check-circle"></i> Process Payment</button>
+    </form>
+
+    <!-- ==== Receipt ==== -->
+    <div id="receiptContainer" class="no-print">
+      <div class="receipt" id="receipt">
+        <div class="receipt-header">
+          <h2 id="company-name">Company</h2>
+          <p id="company-address">Address</p>
+          <p id="company-phone">Phone</p>
+        </div>
+        <div id="receipt-body"></div>
+        <div class="receipt-footer"><p>Valid for 3 hours</p><p>Thank you!</p></div>
+      </div>
+      <div class="receipt-controls">
+        <button id="printBtn" class="btn btn-success"><i class="fas fa-print"></i> Print</button>
+        <button id="newPaymentBtn" class="btn btn-secondary"><i class="fas fa-plus-circle"></i> New</button>
+      </div>
+    </div>
   </div>
 
-  <form id="paymentForm">
-    <div class="form-group">
-      <label for="name">Customer Name</label>
-      <input type="text" id="name" required>
-    </div>
-    <div class="form-group">
-      <label for="flight">Flight No</label>
-      <input type="text" id="flight" required>
-    </div>
-    <div class="form-group">
-      <label for="seat">Seat No</label>
-      <input type="text" id="seat" required>
-    </div>
-    <div class="form-group">
-      <label for="adults">Adults</label>
-      <input type="number" id="adults" value="1" required>
-    </div>
-    <div class="form-group">
-      <label for="kids">Kids</label>
-      <input type="number" id="kids" value="0">
-    </div>
-    <div class="form-group">
-      <label for="paymentType">Payment Method</label>
-      <select id="paymentType" required>
-        <option value="">Select</option>
-        <option value="Cash">Cash</option>
-        <option value="Visa">Visa</option>
-        <option value="MasterCard">MasterCard</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="total">Total Amount</label>
-      <input type="number" id="total" step="0.01" required>
-    </div>
-    <button type="submit">Save Payment</button>
-  </form>
-
-  <script>
-    // 🔹 Get login info from localStorage
-    const username = localStorage.getItem("username") || "Guest";
-    const level = localStorage.getItem("level") || "";
-
-    document.getElementById("loginUser").textContent = username;
-    document.getElementById("userLevel").textContent = level || "N/A";
-
-    // 🔹 Firestore reference
-    const bookingsRef = db.collection("bookings");
-
-    // 🔹 Handle form submit
-    document.getElementById("paymentForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const booking = {
-        name: document.getElementById("name").value,
-        flight: document.getElementById("flight").value,
-        seat: document.getElementById("seat").value,
-        adults: parseInt(document.getElementById("adults").value),
-        kids: parseInt(document.getElementById("kids").value),
-        paymentType: document.getElementById("paymentType").value,
-        total: parseFloat(document.getElementById("total").value),
-        date: new Date().toISOString().split("T")[0], // YYYY-MM-DD
-        shift: "Morning", // always shift 1
-        loginUser: username,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      };
-
-      try {
-        await bookingsRef.add(booking);
-        alert("Payment saved successfully!");
-        document.getElementById("paymentForm").reset();
-      } catch (err) {
-        console.error("Error saving payment:", err);
-        alert("Error saving payment");
-      }
-    });
-  </script>
+  <!-- ==== Firebase ==== -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="fire2.js"></script>
+  <script src="rate.js"></script>
+  <script src="Co.js"></script>
+  <script src="payment.js"></script> <!-- put all JS logic separately -->
 </body>
 </html>
