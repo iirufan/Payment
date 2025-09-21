@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Update Payments</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="fire2.js"></script>
@@ -13,6 +14,7 @@
   :root {
     --primary: #4361ee;
     --primary-light: #e6ecff;
+    --primary-dark: #3a56d4;
     --secondary: #3f37c9;
     --success: #4cc9f0;
     --warning: #ff9e00;
@@ -22,8 +24,11 @@
     --gray: #6c757d;
     --gray-light: #dee2e6;
     --border: #dee2e6;
-    --shadow: 0 4px 20px rgba(0,0,0,0.08);
-    --radius: 12px;
+    --card-bg: #ffffff;
+    --sidebar-bg: #1a2236;
+    --sidebar-hover: #222c44;
+    --shadow: 0 4px 20px rgba(0,0,0,0.05);
+    --radius: 10px;
     --transition: all 0.3s ease;
   }
 
@@ -34,54 +39,58 @@
   }
 
   body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+    font-family: 'Inter', sans-serif;
+    background: #f5f7fa;
     color: var(--dark);
     line-height: 1.6;
     min-height: 100vh;
-    padding: 20px;
+    padding: 0;
   }
 
   .dashboard-container {
     display: flex;
     min-height: 100vh;
-    max-width: 1600px;
-    margin: 0 auto;
-    gap: 20px;
+    max-width: 100%;
+    margin: 0;
+    gap: 0;
   }
 
   /* Sidebar Styles */
   .sidebar {
     width: 280px;
-    background: linear-gradient(to bottom, #2c3e50, #34495e);
+    background: var(--sidebar-bg);
     color: white;
-    padding: 25px 0;
+    padding: 0;
     display: flex;
     flex-direction: column;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    position: fixed;
+    height: 100vh;
+    z-index: 100;
+    overflow-y: auto;
   }
 
   .logo {
-    padding: 0 25px 25px;
+    padding: 24px;
     border-bottom: 1px solid rgba(255,255,255,0.1);
-    margin-bottom: 25px;
+    margin-bottom: 10px;
   }
 
   .logo h2 {
     display: flex;
     align-items: center;
     gap: 12px;
-    font-size: 22px;
+    font-size: 20px;
+    font-weight: 700;
   }
 
   .logo h2 i {
-    color: #3498db;
+    color: #4cc9f0;
   }
 
   .user-info {
-    padding: 0 25px;
-    margin-bottom: 30px;
+    padding: 0 24px 20px;
+    margin-bottom: 10px;
   }
 
   .user-info p {
@@ -90,10 +99,11 @@
     align-items: center;
     gap: 10px;
     font-size: 14px;
+    color: rgba(255,255,255,0.8);
   }
 
   .level-badge {
-    background: #3498db;
+    background: #4cc9f0;
     padding: 4px 10px;
     border-radius: 20px;
     font-size: 12px;
@@ -102,38 +112,48 @@
 
   .nav-links {
     flex-grow: 1;
+    padding: 0 16px;
   }
 
   .nav-item {
     display: flex;
     align-items: center;
-    padding: 14px 25px;
-    color: #ecf0f1;
+    padding: 14px 16px;
+    color: rgba(255,255,255,0.8);
     text-decoration: none;
     transition: var(--transition);
     gap: 12px;
     font-size: 15px;
+    border-radius: var(--radius);
+    margin-bottom: 6px;
   }
 
   .nav-item:hover, .nav-item.active {
-    background: rgba(52, 152, 219, 0.2);
-    border-left: 4px solid #3498db;
+    background: var(--sidebar-hover);
+    color: white;
+  }
+
+  .nav-item.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(67, 97, 238, 0.2);
   }
 
   .logout-btn {
-    margin-top: auto;
-    padding: 16px 25px;
+    margin: 20px 16px;
+    padding: 14px 16px;
     display: flex;
     align-items: center;
     gap: 12px;
     cursor: pointer;
-    color: #e74c3c;
-    border-top: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.8);
+    border-radius: var(--radius);
     transition: var(--transition);
   }
 
   .logout-btn:hover {
     background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
   }
 
   /* Main Content Styles */
@@ -141,13 +161,16 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
+    margin-left: 280px;
+    padding: 24px;
+    background: #f5f7fa;
   }
 
   .header {
-    background: white;
+    background: var(--card-bg);
     border-radius: var(--radius);
-    padding: 25px;
+    padding: 24px;
     box-shadow: var(--shadow);
     display: flex;
     justify-content: space-between;
@@ -155,7 +178,7 @@
   }
 
   .header h1 {
-    color: var(--primary);
+    color: var(--dark);
     font-weight: 700;
     margin-bottom: 8px;
     font-size: 28px;
@@ -170,13 +193,16 @@
     color: var(--gray);
     font-size: 14px;
     text-align: right;
+    background: var(--primary-light);
+    padding: 8px 16px;
+    border-radius: 20px;
   }
 
   /* Controls Section */
   .controls-card {
-    background: white;
+    background: var(--card-bg);
     border-radius: var(--radius);
-    padding: 25px;
+    padding: 24px;
     box-shadow: var(--shadow);
   }
 
@@ -184,6 +210,7 @@
     display: flex;
     gap: 20px;
     flex-wrap: wrap;
+    align-items: center;
   }
 
   .search-box {
@@ -255,13 +282,13 @@
   }
 
   .refresh-btn:hover {
-    background: var(--secondary);
+    background: var(--primary-dark);
     transform: translateY(-2px);
   }
 
   /* Table Container */
   .table-container {
-    background: white;
+    background: var(--card-bg);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     overflow: hidden;
@@ -271,7 +298,7 @@
   }
 
   .table-header {
-    padding: 20px;
+    padding: 20px 24px;
     border-bottom: 1px solid var(--border);
     display: flex;
     justify-content: space-between;
@@ -292,7 +319,8 @@
 
   table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     min-width: 1000px;
   }
 
@@ -309,6 +337,11 @@
     color: var(--dark);
     position: sticky;
     top: 0;
+    padding: 16px;
+  }
+
+  tr {
+    transition: var(--transition);
   }
 
   tr:hover {
@@ -355,7 +388,7 @@
   }
 
   .btn-update:hover {
-    background: var(--secondary);
+    background: var(--primary-dark);
     transform: translateY(-2px);
   }
 
@@ -562,7 +595,7 @@
   }
 
   .btn-print-receipt:hover {
-    background: var(--secondary);
+    background: var(--primary-dark);
   }
 
   .btn-close-receipt {
@@ -574,40 +607,53 @@
     background: #5a6268;
   }
 
+  /* Responsive Design */
   @media (max-width: 1200px) {
-    .dashboard-container {
-      flex-direction: column;
-    }
-    
     .sidebar {
-      width: 100%;
-      padding: 20px;
+      width: 240px;
     }
     
-    .nav-links {
-      display: flex;
-      overflow-x: auto;
-      gap: 5px;
-      margin-bottom: 15px;
+    .main-content {
+      margin-left: 240px;
+    }
+  }
+
+  @media (max-width: 992px) {
+    .sidebar {
+      width: 80px;
+      overflow: visible;
     }
     
-    .nav-item {
-      padding: 12px 15px;
-      border-radius: 8px;
-      white-space: nowrap;
+    .sidebar .logo h2 span,
+    .sidebar .user-info,
+    .sidebar .nav-item span,
+    .sidebar .logout-btn span {
+      display: none;
     }
     
-    .logout-btn {
-      margin-top: 0;
-      border-top: none;
-      border-left: 1px solid rgba(255,255,255,0.1);
+    .sidebar .logo {
+      padding: 24px 0;
+      text-align: center;
+    }
+    
+    .sidebar .nav-item {
       justify-content: center;
+      padding: 16px;
+    }
+    
+    .main-content {
+      margin-left: 80px;
     }
   }
 
   @media (max-width: 768px) {
-    body {
-      padding: 15px;
+    .sidebar {
+      display: none;
+    }
+    
+    .main-content {
+      margin-left: 0;
+      padding: 16px;
     }
     
     .header {
@@ -670,7 +716,7 @@
   <!-- Sidebar -->
   <div class="sidebar">
     <div class="logo">
-      <h2><i class="fas fa-money-bill-wave"></i> Payment System</h2>
+      <h2><i class="fas fa-money-bill-wave"></i> <span>Payment System</span></h2>
     </div>
     
     <div class="user-info">
@@ -680,27 +726,27 @@
     
     <div class="nav-links">
       <a href="dashboard.html" class="nav-item">
-        <i class="fas fa-home"></i> Dashboard
+        <i class="fas fa-home"></i> <span>Dashboard</span>
       </a>
       <a href="newpayment.html" class="nav-item">
-        <i class="fas fa-plus-circle"></i> New Payment
+        <i class="fas fa-plus-circle"></i> <span>New Payment</span>
       </a>
       <a href="#" class="nav-item active">
-        <i class="fas fa-edit"></i> Update Payment
+        <i class="fas fa-edit"></i> <span>Update Payment</span>
       </a>
       <a href="edit_payments.html" class="nav-item">
-        <i class="fas fa-ban"></i> Void
+        <i class="fas fa-ban"></i> <span>Void</span>
       </a>
       <a href="shiftmanagement.html" class="nav-item">
-        <i class="fas fa-clock"></i> Shift Management
+        <i class="fas fa-clock"></i> <span>Shift Management</span>
       </a>
       <a href="cashiermanagement.html" class="nav-item">
-        <i class="fas fa-users"></i> Cashier Management
+        <i class="fas fa-users"></i> <span>Cashier Management</span>
       </a>
     </div>
     
     <div class="logout-btn" onclick="logout()">
-      <i class="fas fa-sign-out-alt"></i> Logout
+      <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
     </div>
   </div>
   
