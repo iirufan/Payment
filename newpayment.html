@@ -637,23 +637,28 @@
         return;
       }
       
-      // Generate receipt content
-      const receiptBody = document.getElementById('receipt-body');
-      receiptBody.innerHTML = `
-        <p>Date: ${new Date().toLocaleDateString()}</p>
-        <p>Passenger: ${name}</p>
-        <p>Flight: ${flight}</p>
-        <p>Seat: ${document.getElementById('seat').value || 'N/A'}</p>
-        <p>Adults: ${document.getElementById('adultCount').value}</p>
-        <p>Kids: ${document.getElementById('kidCount').value}</p>
-        <div class="receipt-divider"></div>
-        <p>Payment Type: ${document.getElementById('paymentType').value}</p>
-        <p>Currency: ${document.getElementById('currency').value}</p>
-        <p class="receipt-total">Total: $50.00</p>
-        <div class="receipt-divider"></div>
-        <p>Processed by: ${user.username}</p>
-        <p>Shift: ${user.Level}</p>
-      `;
+    // Generate receipt number
+let lastReceiptNo = parseInt(localStorage.getItem("lastReceiptNo")) || 0;
+const newReceiptNo = lastReceiptNo + 1;
+localStorage.setItem("lastReceiptNo", newReceiptNo);
+
+// Include in receipt
+receiptBody.innerHTML = `
+  <p>Receipt No: ${newReceiptNo}</p>
+  <p>Date: ${new Date().toLocaleDateString()}</p>
+  <p>Passenger: ${name}</p>
+  <p>Flight: ${flight}</p>
+  <p>Seat: ${document.getElementById('seat').value || 'N/A'}</p>
+  <p>Adults: ${document.getElementById('adultCount').value}</p>
+  <p>Kids: ${document.getElementById('kidCount').value}</p>
+  <div class="receipt-divider"></div>
+  <p>Payment Type: ${document.getElementById('paymentType').value}</p>
+  <p>Currency: ${document.getElementById('currency').value}</p>
+  <p class="receipt-total">Total: $50.00</p>
+  <div class="receipt-divider"></div>
+  <p>Processed by: ${user.username}</p>
+  <p>Shift: ${user.Level}</p>
+`;
       
       // Show receipt
       document.getElementById('receiptContainer').style.display = 'block';
@@ -669,3 +674,4 @@
   </script>
 </body>
 </html>
+
