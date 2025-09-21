@@ -522,23 +522,25 @@
         // Total count
         document.getElementById("totalTransactions").textContent = payments.length;
 
-        // Pending = Visa (or card) missing approvalCode/batchNo
-        const pending = payments.filter(p => 
-          p.paymentType && p.paymentType.toLowerCase().includes("visa") &&
-          (!p.approvalCode || !p.batchNo)
-        );
-
-        document.getElementById("pendingCount").textContent = pending.length;
-        
-        const notif = document.getElementById("pendingNotification");
-        const notifText = document.getElementById("notificationText");
-        
-        if (pending.length > 0) {
-          notif.style.display = "flex";
-          notifText.textContent = `You have ${pending.length} pending card payment(s) that require approval code and batch number.`;
-        } else {
-          notif.style.display = "none";
-        }
+        // Pending = card type or missing batch/approval code for non-cash payments
+      const pending = payments.filter(b =>
+        b.paymentType && (
+          b.paymentType.toLowerCase() === "card" ||
+          (b.paymentType.toLowerCase() !== "cash" && (!b.batchNo || !b.approvalCode))
+        )
+      );
+      
+      document.getElementById("pendingCount").textContent = pending.length;
+      
+      const notif = document.getElementById("pendingNotification");
+      const notifText = document.getElementById("notificationText");
+      
+      if (pending.length > 0) {
+        notif.style.display = "flex";
+        notifText.textContent = `You have ${pending.length} pending payment(s) that require approval code or batch number.`;
+      } else {
+        notif.style.display = "none";
+      }
       });
   }
 </script>
