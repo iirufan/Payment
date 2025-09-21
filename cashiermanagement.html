@@ -2,20 +2,27 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Cash Denomination Count (USD & MVR)</title>
+  <title>Cash & Petty Cash Management</title>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-  <script src="fire2.js"></script> <!-- your firebase config -->
+  <script src="fire2.js"></script> <!-- your Firebase config -->
+  <script src="users.js"></script>  <!-- your user.js -->
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
     h2 { margin-bottom: 10px; }
-    .tables { display: flex; gap: 40px; margin-top: 20px; }
+    .tables { display: flex; gap: 40px; margin-bottom: 30px; }
     table { border-collapse: collapse; width: 250px; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
     th { background-color: #f2f2f2; }
     input[type=number] { width: 60px; text-align: center; }
     .total-row { font-weight: bold; }
     .firebase-total { margin-bottom: 10px; }
+    .card { border: 1px solid #ccc; padding: 20px; border-radius: 10px; margin-bottom: 20px; max-width: 400px; }
+    label { display: block; margin-bottom: 5px; }
+    input[type=password], input[type=text] { width: 100%; padding: 5px; margin-bottom: 10px; }
+    button { padding: 8px 12px; margin-top: 5px; }
+    .success { color: green; }
+    .error { color: red; }
   </style>
 </head>
 <body>
@@ -52,6 +59,27 @@
       </tr>
     </tfoot>
   </table>
+</div>
+
+<!-- Petty Cash Section -->
+<div class="card">
+  <h2>Set Petty Cash</h2>
+  <label for="supervisorUser">Supervisor Username:</label>
+  <input type="text" id="supervisorUser" placeholder="Enter username">
+
+  <label for="supervisorPass">Supervisor Password:</label>
+  <input type="password" id="supervisorPass" placeholder="Enter password">
+
+  <label for="pettyAmount">Petty Cash Amount:</label>
+  <input type="number" id="pettyAmount" placeholder="Enter amount" min="0">
+
+  <button id="setPettyCashBtn">Set Petty Cash</button>
+  <p id="message"></p>
+</div>
+
+<div class="card">
+  <h2>Current Petty Cash</h2>
+  <p>Petty Cash Amount: <span id="currentPettyCash">Loading...</span></p>
 </div>
 
 <script>
@@ -100,11 +128,9 @@
     });
   }
 
-  // Create both tables
   createDenominationTable(usdDenominations, "#usdTable tbody", "#usdGrandTotal");
   createDenominationTable(mvrDenominations, "#mvrTable tbody", "#mvrGrandTotal");
 
-  // Fetch Firebase totals
   const today = new Date();
   const yyyy = today.getFullYear();
   const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -114,7 +140,7 @@
   const totalUSDEl = document.getElementById("totalUSD");
   const totalMVREl = document.getElementById("totalMVR");
 
-  // First get current shift
+  // Fetch current shift
   db.collection("shifts").where("status", "==", "open").limit(1)
     .onSnapshot(snapshot => {
       if (snapshot.empty) {
@@ -157,6 +183,68 @@
           totalMVREl.textContent = total.toFixed(2);
         });
     });
+
+  // Petty Cash Section
+  const pettyAmountInput = document.getElementById("pettyAmount");
+  const supervisorUserInput = document.getElementById("supervisorUser");
+  const supervisorPassInput = document.getElementById("supervisorPass");
+  const setBtn = document.getElementById("setPettyCashBtn");
+  const msgEl = document.getElementById("message");
+  const currentPettyEl = document.getElementById("currentPettyCash");
+
+  const pettyCashDoc = db.collection("pettyCash").doc("current");
+
+  pettyCashDoc.onSnapshot(doc => {
+    if (doc.exists) {
+      const data = doc.data();
+      currentPettyEl.textContent = data.amount.toFixed(2);
+    } else {
+      currentPettyEl.textContent = "0.00";
+    }
+  });
+
+  setBtn.addEventListener("click", () => {
+    msgEl.textContent = "";
+    const username = supervisorUserInput.value.trim();
+    const password = supervisorPassInput.value.trim();
+    const amount = Number(pettyAmountInput.value);
+
+    if (!username || !password) {
+      msgEl.textContent = "Supervisor login required!";
+      msgEl.className = "error";
+      return;
+    }
+
+    // Validate against users.js
+    const validSupervisor = users.find(u => u.username === username && u.password === password && u.Level === "Supervisor");
+    if (!validSupervisor) {
+      msgEl.textContent = "Invalid supervisor credentials!";
+      msgEl.className = "error";
+      return;
+    }
+
+    if (isNaN(amount) || amount < 0) {
+      msgEl.textContent = "Enter a valid petty cash amount!";
+      msgEl.className = "error";
+      return;
+    }
+
+    // Save petty cash to Firebase
+    pettyCashDoc.set({ amount })
+      .then(() => {
+        msgEl.textContent = "Petty cash amount set successfully!";
+        msgEl.className = "success";
+        pettyAmountInput.value = "";
+        supervisorUserInput.value = "";
+        supervisorPassInput.value = "";
+      })
+      .catch(err => {
+        console.error(err);
+        msgEl.textContent = "Error saving petty cash!";
+        msgEl.className = "error";
+      });
+  });
+
 </script>
 
 </body>
