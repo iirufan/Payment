@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Current Shift Payments</title>
+  <title>Current Shift Cash Payments</title>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
   <script src="fire2.js"></script> <!-- your firebase config -->
@@ -14,10 +14,10 @@
 </head>
 <body>
   <div class="card">
-    <div class="title">Current Shift Payments</div>
+    <div class="title">Current Shift Cash Payments</div>
     <p>Current Date: <span id="currentDate">Loading...</span></p>
     <p>Current Shift No: <span id="shiftNo">Loading...</span></p>
-    <p>Total Payments (after voids): <span id="totalPayments">Loading...</span></p>
+    <p>Total Cash Payments (after voids): <span id="totalPayments">Loading...</span></p>
   </div>
 
   <script>
@@ -50,15 +50,15 @@
 
         shiftNoSpan.textContent = shiftNo;
 
-        // Fetch payments for current date and shift
+        // Fetch Cash payments for current date and shift, excluding voided payments
         db.collection("payments")
           .where("date", "==", currentDate)
           .where("shift", "==", shiftName)
+          .where("paymentType", "==", "Cash")
           .onSnapshot(paySnapshot => {
             let total = 0;
             paySnapshot.forEach(doc => {
               const payment = doc.data();
-              // Only add payments that are not voided
               if (!payment.voided) {
                 total += Number(payment.total || 0);
               }
