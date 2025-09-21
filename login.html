@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Login Portal</title>
+    <title>Secure Login System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -18,7 +18,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
             padding: 20px;
         }
         
@@ -27,13 +27,13 @@
             max-width: 450px;
             background: #fff;
             border-radius: 15px;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
             overflow: hidden;
             animation: fadeIn 0.5s ease-out;
         }
         
         .login-header {
-            background: #667eea;
+            background: #4a6cf7;
             color: white;
             text-align: center;
             padding: 25px;
@@ -90,15 +90,15 @@
         }
         
         .input-icon input:focus {
-            border-color: #667eea;
+            border-color: #4a6cf7;
             outline: none;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.1);
         }
         
         .btn {
             width: 100%;
             padding: 14px;
-            background: #667eea;
+            background: #4a6cf7;
             color: white;
             border: none;
             border-radius: 8px;
@@ -106,10 +106,14 @@
             font-weight: 600;
             cursor: pointer;
             transition: background 0.3s, transform 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
         }
         
         .btn:hover {
-            background: #5a6fd8;
+            background: #3a5cd8;
             transform: translateY(-2px);
         }
         
@@ -158,7 +162,7 @@
         }
         
         .forgot-password {
-            color: #667eea;
+            color: #4a6cf7;
             text-decoration: none;
         }
         
@@ -233,22 +237,26 @@
             </div>
         </form>
         <div class="footer">
-            <p>© 2023 Company Name. All rights reserved.</p>
+            <p>© 2023 Secure Login System. All rights reserved.</p>
         </div>
     </div>
 
-    <!-- Link to external user.js file -->
-    <script src="user.js"></script>
-    
+    <!-- This script would be in your external user.js file -->
     <script>
-        // This would be the content of user.js in a real implementation
-        // For demonstration, I'm including it here but in reality it would be in a separate file
+        // This is a simulation of what your external user.js file would contain
+        // In reality, this would be in a separate file named user.js
+        console.log("User credentials loaded from external user.js file");
+        
+        // User credentials array
         const users = [
             { username: "john.doe", password: "password123", name: "John Doe", email: "john@example.com" },
             { username: "jane.smith", password: "securepass", name: "Jane Smith", email: "jane@example.com" },
             { username: "admin", password: "admin123", name: "Administrator", email: "admin@example.com" }
         ];
+    </script>
 
+    <script>
+        // Main application logic
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
