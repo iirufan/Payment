@@ -23,6 +23,7 @@ button { padding: 8px 12px; margin-top: 5px; }
 .success { color: green; }
 .error { color: red; }
 .summary { border: 1px solid #999; padding: 15px; margin-top: 20px; max-width: 500px; }
+.hidden { display:none; }
 </style>
 </head>
 <body>
@@ -51,17 +52,20 @@ button { padding: 8px 12px; margin-top: 5px; }
   </table>
 </div>
 
-<!-- Petty Cash Section -->
-<div class="card">
-  <h2>Set Petty Cash (Supervisor Only)</h2>
-  <label>Supervisor Username:</label>
-  <input type="text" id="supervisorUser" placeholder="Enter username">
-  <label>Supervisor Password:</label>
-  <input type="password" id="supervisorPass" placeholder="Enter password">
-  <label>Petty Cash USD Amount:</label>
-  <input type="number" id="pettyUSD" placeholder="Enter USD amount" min="0">
-  <label>Petty Cash MVR Amount:</label>
-  <input type="number" id="pettyMVR" placeholder="Enter MVR amount" min="0">
+<!-- Supervisor Login -->
+<div class="card" id="supervisorLoginCard">
+  <h3>Supervisor Login</h3>
+  <label>Username:</label><input type="text" id="supUser"><br>
+  <label>Password:</label><input type="password" id="supPass"><br>
+  <button id="supLoginBtn">Login</button>
+  <p id="supMsg"></p>
+</div>
+
+<!-- Petty Cash Section (hidden initially) -->
+<div class="card hidden" id="setPettyCashCard">
+  <h2>Set Petty Cash</h2>
+  <label>Petty Cash USD Amount:</label><input type="number" id="pettyUSD" min="0"><br>
+  <label>Petty Cash MVR Amount:</label><input type="number" id="pettyMVR" min="0"><br>
   <button id="setPettyCashBtn">Set Petty Cash</button>
   <p id="message"></p>
 </div>
@@ -152,8 +156,6 @@ db.collection("shifts").where("status","==","open").limit(1).onSnapshot(snap=>{
 // Petty Cash
 const pettyUSDInput=document.getElementById("pettyUSD");
 const pettyMVRInput=document.getElementById("pettyMVR");
-const supervisorUserInput=document.getElementById("supervisorUser");
-const supervisorPassInput=document.getElementById("supervisorPass");
 const setBtn=document.getElementById("setPettyCashBtn");
 const msgEl=document.getElementById("message");
 const currentPettyUSD = document.getElementById("currentPettyUSD");
@@ -165,29 +167,33 @@ pettyDoc.get().then(doc=>{if(!doc.exists){pettyDoc.set({USD:0,MVR:0});}});
 // Live fetch petty cash
 pettyDoc.onSnapshot(doc=>{
   if(doc.exists){
-    const d=doc.data();
-    currentPettyUSD.textContent = d.USD?.toFixed(2)||"0.00";
-    currentPettyMVR.textContent = d.MVR?.toFixed(2)||"0.00";
+    const data = doc.data();
+    currentPettyUSD.textContent = data.USD?.toFixed(2)||"0.00";
+    currentPettyMVR.textContent = data.MVR?.toFixed(2)||"0.00";
     updateSummary();
   }
 });
 
+// Supervisor login
+const supLoginBtn = document.getElementById("supLoginBtn");
+supLoginBtn.addEventListener("click",()=>{
+  const username = document.getElementById("supUser").value.trim();
+  const password = document.getElementById("supPass").value.trim();
+  const supMsg = document.getElementById("supMsg");
+  const validSupervisor = users.find(u=>u.username===username && u.password===password && u.Level==="Supervisor");
+  if(validSupervisor){
+    supMsg.textContent = "Supervisor login successful";
+    document.getElementById("setPettyCashCard").classList.remove("hidden");
+    document.getElementById("supervisorLoginCard").classList.add("hidden");
+  } else { supMsg.textContent="Invalid supervisor credentials"; }
+});
+
+// Set petty cash button
 setBtn.addEventListener("click",()=>{
-  msgEl.textContent="";
-  const username = supervisorUserInput.value.trim();
-  const password = supervisorPassInput.value.trim();
   const usdAmt = Number(pettyUSDInput.value);
   const mvrAmt = Number(pettyMVRInput.value);
-
-  if(!username || !password){ msgEl.textContent="Supervisor login required!"; msgEl.className="error"; return;}
-  const validSupervisor = users.find(u => u.username===username && u.password===password && u.Level==="Supervisor");
-  if(!validSupervisor){ msgEl.textContent="Invalid supervisor credentials!"; msgEl.className="error"; return;}
-  if(isNaN(usdAmt)||usdAmt<0||isNaN(mvrAmt)||mvrAmt<0){ msgEl.textContent="Enter valid amounts!"; msgEl.className="error"; return;}
-
-  pettyDoc.set({USD: usdAmt, MVR: mvrAmt}).then(()=>{
-    msgEl.textContent="Petty cash updated!"; msgEl.className="success";
-    pettyUSDInput.value=""; pettyMVRInput.value=""; supervisorUserInput.value=""; supervisorPassInput.value="";
-  }).catch(err=>{console.error(err); msgEl.textContent="Error saving petty cash"; msgEl.className="error";});
+  if(isNaN(usdAmt)||usdAmt<0||isNaN(mvrAmt)||mvrAmt<0){ msgEl.textContent="Enter valid amounts"; return;}
+  pettyDoc.set({USD:usdAmt,MVR:mvrAmt}).then(()=>{msgEl.textContent="Petty cash updated"; pettyUSDInput.value=""; pettyMVRInput.value="";});
 });
 
 // Reconciliation Summary
