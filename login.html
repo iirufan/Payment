@@ -241,19 +241,8 @@
         </div>
     </div>
 
-    <!-- This script would be in your external user.js file -->
-    <script>
-        // This is a simulation of what your external user.js file would contain
-        // In reality, this would be in a separate file named user.js
-        console.log("User credentials loaded from external user.js file");
-        
-        // User credentials array
-        const users = [
-            { username: "john.doe", password: "password123", name: "John Doe", email: "john@example.com" },
-            { username: "jane.smith", password: "securepass", name: "Jane Smith", email: "jane@example.com" },
-            { username: "admin", password: "admin123", name: "Administrator", email: "admin@example.com" }
-        ];
-    </script>
+    <!-- Reference to your external user.js file -->
+    <script src="user.js"></script>
 
     <script>
         // Main application logic
@@ -276,6 +265,18 @@
             btnText.textContent = 'Authenticating...';
             btnSpinner.style.display = 'inline-block';
             loginBtn.disabled = true;
+            
+            // Check if users array is available from user.js
+            if (typeof users === 'undefined') {
+                errorMessage.textContent = 'Error: User database not loaded. Please check user.js file.';
+                errorMessage.style.display = 'block';
+                
+                // Reset button state
+                btnText.textContent = 'Login';
+                btnSpinner.style.display = 'none';
+                loginBtn.disabled = false;
+                return;
+            }
             
             // Simulate network delay
             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -316,12 +317,17 @@
             }
         });
         
-        // Demo credentials helper
+        // Demo credentials helper (optional - remove in production)
         document.addEventListener('DOMContentLoaded', function() {
-            const footer = document.querySelector('.footer');
-            const demoInfo = document.createElement('div');
-            demoInfo.innerHTML = '<p style="margin-top: 10px; font-size: 12px; color: #999;">Demo: Try john.doe/password123 or admin/admin123</p>';
-            footer.appendChild(demoInfo);
+            // Only show demo info if users array is available
+            if (typeof users !== 'undefined' && users.length > 0) {
+                const footer = document.querySelector('.footer');
+                const demoInfo = document.createElement('div');
+                demoInfo.innerHTML = `<p style="margin-top: 10px; font-size: 12px; color: #999;">
+                    Demo: Try ${users[0].username}/${users[0].password} or other credentials from user.js
+                </p>`;
+                footer.appendChild(demoInfo);
+            }
         });
     </script>
 </body>
