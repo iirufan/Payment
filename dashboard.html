@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Dashboard</title>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
   <script src="fire2.js"></script>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; background: #f4f6f9; }
@@ -51,32 +51,37 @@
       window.location.href = "login.html";
     }
 
-    // 🔹 Fetch current shift from Firebase
-    db.ref("shifts/current").on("value", snapshot => {
-      const shift = snapshot.val();
-      document.getElementById("currentShift").textContent = shift ? shift : "No shift open";
+    // 🔹 Firestore references
+    const shiftRef = db.collection("shifts").doc("current");
+    const transactionsRef = db.collection("transactions");
+
+    // 🔹 Current shift
+    shiftRef.onSnapshot(doc => {
+      if (doc.exists) {
+        const data = doc.data();
+        document.getElementById("currentShift").textContent = data.shift || "No shift open";
+      } else {
+        document.getElementById("currentShift").textContent = "No shift open";
+      }
     });
 
-    // 🔹 Fetch transactions
-    db.ref("transactions").on("value", snapshot => {
-      const data = snapshot.val();
-      if (data) {
-        const transactions = Object.values(data);
-        document.getElementById("totalTransactions").textContent = transactions.length;
+    // 🔹 Transactions
+    transactionsRef.onSnapshot(snapshot => {
+      const transactions = [];
+      snapshot.forEach(doc => transactions.push(doc.data()));
 
-        // Pending updates = card payments with missing approvalCode OR batchNo
-        const pending = transactions.filter(t => 
-          t.paymentMethod === "Card" && (!t.approvalCode || !t.batchNo)
-        );
+      document.getElementById("totalTransactions").textContent = transactions.length;
 
-        const notif = document.getElementById("pendingNotification");
-        if (pending.length > 0) {
-          notif.innerHTML = `<div class="notification">⚠️ ${pending.length} pending card updates!</div>`;
-        } else {
-          notif.innerHTML = "";
-        }
+      // Pending = card payments missing approvalCode OR batchNo
+      const pending = transactions.filter(t => 
+        t.paymentMethod === "Card" && (!t.approvalCode || !t.batchNo)
+      );
+
+      const notif = document.getElementById("pendingNotification");
+      if (pending.length > 0) {
+        notif.innerHTML = `<div class="notification">⚠️ ${pending.length} pending card updates!</div>`;
       } else {
-        document.getElementById("totalTransactions").textContent = "0";
+        notif.innerHTML = "";
       }
     });
   </script>
