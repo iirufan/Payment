@@ -5,20 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Update Payments</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<!-- Include your external files -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="fire2.js"></script>
 <script src="Co.js"></script>
 <style>
   :root {
     --primary: #4361ee;
+    --primary-light: #e6ecff;
     --secondary: #3f37c9;
     --success: #4cc9f0;
+    --warning: #ff9e00;
+    --danger: #e63946;
     --light: #f8f9fa;
     --dark: #212529;
     --gray: #6c757d;
+    --gray-light: #dee2e6;
     --border: #dee2e6;
     --shadow: 0 4px 20px rgba(0,0,0,0.08);
-    --radius: 8px;
+    --radius: 12px;
     --transition: all 0.3s ease;
   }
 
@@ -33,22 +38,120 @@
     background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
     color: var(--dark);
     line-height: 1.6;
-    padding: 20px;
     min-height: 100vh;
+    padding: 20px;
   }
 
-  .container {
-    max-width: 1400px;
+  .dashboard-container {
+    display: flex;
+    min-height: 100vh;
+    max-width: 1600px;
     margin: 0 auto;
+    gap: 20px;
+  }
+
+  /* Sidebar Styles */
+  .sidebar {
+    width: 280px;
+    background: linear-gradient(to bottom, #2c3e50, #34495e);
+    color: white;
+    padding: 25px 0;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+
+  .logo {
+    padding: 0 25px 25px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    margin-bottom: 25px;
+  }
+
+  .logo h2 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 22px;
+  }
+
+  .logo h2 i {
+    color: #3498db;
+  }
+
+  .user-info {
+    padding: 0 25px;
+    margin-bottom: 30px;
+  }
+
+  .user-info p {
+    margin: 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+  }
+
+  .level-badge {
+    background: #3498db;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .nav-links {
+    flex-grow: 1;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    padding: 14px 25px;
+    color: #ecf0f1;
+    text-decoration: none;
+    transition: var(--transition);
+    gap: 12px;
+    font-size: 15px;
+  }
+
+  .nav-item:hover, .nav-item.active {
+    background: rgba(52, 152, 219, 0.2);
+    border-left: 4px solid #3498db;
+  }
+
+  .logout-btn {
+    margin-top: auto;
+    padding: 16px 25px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    color: #e74c3c;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    transition: var(--transition);
+  }
+
+  .logout-btn:hover {
+    background: rgba(231, 76, 60, 0.1);
+  }
+
+  /* Main Content Styles */
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
   }
 
   .header {
-    text-align: center;
-    margin-bottom: 30px;
-    padding: 20px;
     background: white;
     border-radius: var(--radius);
+    padding: 25px;
     box-shadow: var(--shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
   .header h1 {
@@ -63,26 +166,40 @@
     font-size: 16px;
   }
 
+  .date-display {
+    color: var(--gray);
+    font-size: 14px;
+    text-align: right;
+  }
+
+  /* Controls Section */
+  .controls-card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 25px;
+    box-shadow: var(--shadow);
+  }
+
   .controls {
     display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    gap: 15px;
+    gap: 20px;
+    flex-wrap: wrap;
   }
 
   .search-box {
     flex: 1;
-    max-width: 400px;
+    min-width: 300px;
     position: relative;
   }
 
   .search-box input {
     width: 100%;
-    padding: 12px 15px 12px 45px;
+    padding: 14px 15px 14px 45px;
     border: 1px solid var(--border);
     border-radius: var(--radius);
     font-size: 15px;
     transition: var(--transition);
+    background: var(--light);
   }
 
   .search-box input:focus {
@@ -103,23 +220,33 @@
     display: flex;
     gap: 15px;
     align-items: center;
+    flex-wrap: wrap;
   }
 
   .filter-controls select {
-    padding: 12px 15px;
+    padding: 14px 15px;
     border: 1px solid var(--border);
     border-radius: var(--radius);
     font-size: 15px;
-    background: white;
+    background: var(--light);
+    min-width: 160px;
+    transition: var(--transition);
+  }
+
+  .filter-controls select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
   }
 
   .refresh-btn {
-    padding: 12px 20px;
+    padding: 14px 20px;
     background: var(--primary);
     color: white;
     border: none;
     border-radius: var(--radius);
     font-size: 15px;
+    font-weight: 600;
     cursor: pointer;
     transition: var(--transition);
     display: flex;
@@ -129,14 +256,37 @@
 
   .refresh-btn:hover {
     background: var(--secondary);
+    transform: translateY(-2px);
   }
 
+  /* Table Container */
   .table-container {
     background: white;
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     overflow: hidden;
-    margin-bottom: 30px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .table-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .table-header h2 {
+    color: var(--dark);
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .table-scroll {
     overflow-x: auto;
   }
 
@@ -147,7 +297,7 @@
   }
 
   th, td {
-    padding: 15px;
+    padding: 16px;
     text-align: left;
     border-bottom: 1px solid var(--border);
     font-size: 14px;
@@ -167,11 +317,12 @@
 
   input, select {
     width: 100%;
-    padding: 10px;
+    padding: 10px 12px;
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: 8px;
     font-size: 14px;
     transition: var(--transition);
+    background: white;
   }
 
   input:focus, select:focus {
@@ -188,13 +339,14 @@
   .btn {
     padding: 8px 12px;
     border: none;
-    border-radius: var(--radius);
+    border-radius: 8px;
     font-size: 13px;
     cursor: pointer;
     transition: var(--transition);
     display: flex;
     align-items: center;
     gap: 5px;
+    font-weight: 600;
   }
 
   .btn-update {
@@ -204,6 +356,7 @@
 
   .btn-update:hover {
     background: var(--secondary);
+    transform: translateY(-2px);
   }
 
   .btn-print {
@@ -213,11 +366,12 @@
 
   .btn-print:hover {
     background: #218838;
+    transform: translateY(-2px);
   }
 
   .status-badge {
     display: inline-block;
-    padding: 5px 10px;
+    padding: 6px 12px;
     border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
@@ -235,36 +389,43 @@
 
   .loading {
     text-align: center;
-    padding: 30px;
+    padding: 40px;
     color: var(--gray);
   }
 
   .empty-state {
     text-align: center;
-    padding: 40px;
+    padding: 50px;
     color: var(--gray);
   }
 
   .empty-state i {
-    font-size: 48px;
+    font-size: 56px;
     margin-bottom: 15px;
     color: #dee2e6;
+  }
+
+  .empty-state p {
+    font-size: 16px;
+    margin-bottom: 20px;
   }
 
   .pagination {
     display: flex;
     justify-content: center;
-    margin-top: 20px;
+    padding: 20px;
     gap: 10px;
+    border-top: 1px solid var(--border);
   }
 
   .pagination button {
-    padding: 8px 15px;
+    padding: 10px 16px;
     border: 1px solid var(--border);
     background: white;
     border-radius: var(--radius);
     cursor: pointer;
     transition: var(--transition);
+    font-weight: 600;
   }
 
   .pagination button:hover {
@@ -289,6 +450,7 @@
     z-index: 1000;
     justify-content: center;
     align-items: center;
+    padding: 20px;
   }
 
   .print-modal-content {
@@ -308,16 +470,23 @@
     font-size: 24px;
     cursor: pointer;
     color: var(--gray);
+    transition: var(--transition);
   }
 
-  /* Receipt styles from payment entry page */
+  .close-modal:hover {
+    color: var(--dark);
+  }
+
+  /* Receipt styles */
   .receipt {
     width: 80mm;
-    padding: 10px;
+    padding: 15px;
     font-family: 'Courier New', monospace;
     font-size: 14px;
     background: white;
     margin: 0 auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
   }
 
   .receipt-header {
@@ -372,17 +541,19 @@
     display: flex;
     justify-content: center;
     gap: 15px;
-    margin-top: 20px;
+    margin-top: 25px;
   }
 
   .print-actions button {
-    padding: 10px 20px;
+    padding: 12px 20px;
     border: none;
     border-radius: var(--radius);
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 8px;
+    font-weight: 600;
+    transition: var(--transition);
   }
 
   .btn-print-receipt {
@@ -390,18 +561,71 @@
     color: white;
   }
 
+  .btn-print-receipt:hover {
+    background: var(--secondary);
+  }
+
   .btn-close-receipt {
     background: var(--gray);
     color: white;
   }
 
+  .btn-close-receipt:hover {
+    background: #5a6268;
+  }
+
+  @media (max-width: 1200px) {
+    .dashboard-container {
+      flex-direction: column;
+    }
+    
+    .sidebar {
+      width: 100%;
+      padding: 20px;
+    }
+    
+    .nav-links {
+      display: flex;
+      overflow-x: auto;
+      gap: 5px;
+      margin-bottom: 15px;
+    }
+    
+    .nav-item {
+      padding: 12px 15px;
+      border-radius: 8px;
+      white-space: nowrap;
+    }
+    
+    .logout-btn {
+      margin-top: 0;
+      border-top: none;
+      border-left: 1px solid rgba(255,255,255,0.1);
+      justify-content: center;
+    }
+  }
+
   @media (max-width: 768px) {
+    body {
+      padding: 15px;
+    }
+    
+    .header {
+      flex-direction: column;
+      text-align: center;
+      gap: 15px;
+    }
+    
+    .date-display {
+      text-align: center;
+    }
+    
     .controls {
       flex-direction: column;
     }
     
     .search-box {
-      max-width: 100%;
+      min-width: 100%;
     }
     
     .filter-controls {
@@ -442,70 +666,122 @@
 </head>
 <body>
 
-<div class="container">
-  <div class="header">
-    <h1>Update Payments</h1>
-    <p>Manage and update payment details for completed transactions</p>
-  </div>
-
-  <div class="controls">
-    <div class="search-box">
-      <i class="fas fa-search"></i>
-      <input type="text" id="searchInput" placeholder="Search by receipt no, name, or flight...">
+<div class="dashboard-container">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo">
+      <h2><i class="fas fa-money-bill-wave"></i> Payment System</h2>
     </div>
     
-    <div class="filter-controls">
-      <select id="paymentTypeFilter">
-        <option value="">All Payment Types</option>
-        <option value="Cash">Cash</option>
-        <option value="Visa">Visa</option>
-        <option value="MasterCard">MasterCard</option>
-        <option value="Amex">Amex</option>
-        <option value="UnionPay">UnionPay</option>
-        <option value="Other">Other</option>
-      </select>
-      
-      <select id="statusFilter">
-        <option value="">All Statuses</option>
-        <option value="complete">Complete</option>
-        <option value="pending">Pending</option>
-      </select>
-      
-      <button class="refresh-btn" id="refreshBtn">
-        <i class="fas fa-sync-alt"></i>
-        Refresh
-      </button>
+    <div class="user-info">
+      <p><i class="fas fa-user"></i> <span id="sidebarUsername">Username</span></p>
+      <p><i class="fas fa-star"></i> Level: <span class="level-badge" id="sidebarLevel">Level</span></p>
+    </div>
+    
+    <div class="nav-links">
+      <a href="dashboard.html" class="nav-item">
+        <i class="fas fa-home"></i> Dashboard
+      </a>
+      <a href="newpayment.html" class="nav-item">
+        <i class="fas fa-plus-circle"></i> New Payment
+      </a>
+      <a href="#" class="nav-item active">
+        <i class="fas fa-edit"></i> Update Payment
+      </a>
+      <a href="edit_payments.html" class="nav-item">
+        <i class="fas fa-ban"></i> Void
+      </a>
+      <a href="shiftmanagement.html" class="nav-item">
+        <i class="fas fa-clock"></i> Shift Management
+      </a>
+      <a href="cashiermanagement.html" class="nav-item">
+        <i class="fas fa-users"></i> Cashier Management
+      </a>
+    </div>
+    
+    <div class="logout-btn" onclick="logout()">
+      <i class="fas fa-sign-out-alt"></i> Logout
     </div>
   </div>
+  
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="header">
+      <div>
+        <h1>Update Payments</h1>
+        <p>Manage and update payment details for completed transactions</p>
+      </div>
+      <div class="date-display" id="currentDate"></div>
+    </div>
 
-  <div class="table-container">
-    <table id="paymentsTable">
-      <thead>
-        <tr>
-          <th>Receipt No</th>
-          <th>Name</th>
-          <th>Flight</th>
-          <th>Total Amount</th>
-          <th>Payment Type</th>
-          <th>Batch No</th>
-          <th>Approval Code</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td colspan="9" class="loading">
-            <i class="fas fa-spinner fa-spin"></i> Loading payments...
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+    <div class="controls-card">
+      <div class="controls">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" id="searchInput" placeholder="Search by receipt no, name, or flight...">
+        </div>
+        
+        <div class="filter-controls">
+          <select id="paymentTypeFilter">
+            <option value="">All Payment Types</option>
+            <option value="Cash">Cash</option>
+            <option value="Visa">Visa</option>
+            <option value="MasterCard">MasterCard</option>
+            <option value="Amex">Amex</option>
+            <option value="UnionPay">UnionPay</option>
+            <option value="Other">Other</option>
+          </select>
+          
+          <select id="statusFilter">
+            <option value="">All Statuses</option>
+            <option value="complete">Complete</option>
+            <option value="pending">Pending</option>
+          </select>
+          
+          <button class="refresh-btn" id="refreshBtn">
+            <i class="fas fa-sync-alt"></i>
+            Refresh
+          </button>
+        </div>
+      </div>
+    </div>
 
-  <div class="pagination" id="pagination">
-    <button id="prevBtn"><i class="fas fa-chevron-left"></i></button>
-    <button id="nextBtn"><i class="fas fa-chevron-right"></i></button>
+    <div class="table-container">
+      <div class="table-header">
+        <h2><i class="fas fa-receipt"></i> Payment Records</h2>
+        <div id="resultsCount">0 results</div>
+      </div>
+      
+      <div class="table-scroll">
+        <table id="paymentsTable">
+          <thead>
+            <tr>
+              <th>Receipt No</th>
+              <th>Name</th>
+              <th>Flight</th>
+              <th>Total Amount</th>
+              <th>Payment Type</th>
+              <th>Batch No</th>
+              <th>Approval Code</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="9" class="loading">
+                <i class="fas fa-spinner fa-spin"></i> Loading payments...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination" id="pagination">
+        <button id="prevBtn"><i class="fas fa-chevron-left"></i></button>
+        <button id="nextBtn"><i class="fas fa-chevron-right"></i></button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -541,11 +817,24 @@
   </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
 // Wait for the external files to load
 window.addEventListener('load', function() {
+  // Set current date
+  const now = new Date();
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
+  
+  // Check if user is logged in
+  const user = JSON.parse(localStorage.getItem("loggedInUser"));
+
+  if (user) {
+    document.getElementById("sidebarUsername").textContent = user.username;
+    document.getElementById("sidebarLevel").textContent = user.Level;
+  } else {
+    window.location.href = "login.html";
+  }
+
   // Initialize Firebase with your configuration from fire2.js
   if (typeof firebaseConfig !== 'undefined') {
     try {
@@ -579,11 +868,12 @@ window.addEventListener('load', function() {
   const closeReceiptBtn = document.getElementById("closeReceiptBtn");
   const printReceiptBtn = document.getElementById("printReceiptBtn");
   const receiptDetails = document.getElementById("receiptDetails");
+  const resultsCount = document.getElementById("resultsCount");
 
   let allPayments = [];
   let filteredPayments = [];
   let currentPage = 1;
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
   // Load payments needing refinement
   async function loadPayments() {
@@ -679,6 +969,9 @@ window.addEventListener('load', function() {
       return matchesSearch && matchesPaymentType && matchesStatus;
     });
     
+    // Update results count
+    resultsCount.textContent = `${filteredPayments.length} results`;
+    
     currentPage = 1; // Reset to first page when filtering
     renderPayments();
   }
@@ -691,6 +984,7 @@ window.addEventListener('load', function() {
           <td colspan="9" class="empty-state">
             <i class="fas fa-receipt"></i>
             <p>No payments found</p>
+            <p class="text-muted">Try adjusting your search or filters</p>
           </td>
       </tr>
       `;
@@ -940,6 +1234,11 @@ window.addEventListener('load', function() {
       printModal.style.display = "none";
     }
   });
+
+  function logout() {
+    localStorage.removeItem("loggedInUser");
+    window.location.href = "login.html";
+  }
 
   // Initialize
   loadPayments();
