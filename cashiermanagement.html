@@ -1,476 +1,209 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Cashier Management — Denominations & Shift</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8">
+  <title>Cashier Management</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="fire2.js"></script>
   <style>
-    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin: 18px; background:#f6f7fb; color:#111; }
-    h1 { margin-bottom: 8px; }
-    .panel { background:white; padding:12px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,.06); margin-bottom:12px; }
-    .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
-    label { font-weight:600; margin-right:6px; }
-    table { width:100%; border-collapse:collapse; margin-top:8px; }
-    table td, table th { padding:8px; border-bottom:1px solid #eee; text-align:left; }
-    input[type=number], input[type=text], input[type=password] { padding:6px 8px; border:1px solid #ddd; border-radius:6px; width:120px; }
-    button { padding:8px 12px; border-radius:8px; border:0; background:#2563eb; color:white; cursor:pointer; }
-    button.secondary { background:#6b7280; }
-    button.danger { background:#dc2626; }
-    .muted { color:#6b7280; font-size:0.9rem; }
-    .status { padding:8px 10px; border-radius:8px; display:inline-block; }
-    .status.open { background: #ecfdf5; color:#065f46; }
-    .status.closed { background: #fffbeb; color:#92400e; }
-    .note { font-size:0.9rem; color:#374151; }
-    .flex-between { display:flex; justify-content:space-between; align-items:center; gap:12px; }
-    .currency-section { display:flex; gap:12px; flex-wrap:wrap; }
-    .card { min-width:320px; flex:1; }
-    .total-line { font-weight:700; }
-    .disabled { opacity:0.6; cursor:not-allowed; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 { text-align: center; color: #2c3e50; }
+    .info { margin: 10px 0; font-weight: bold; }
+    .denomination-section {
+      margin: 20px 0;
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .denomination-section h3 { margin-bottom: 10px; color: #34495e; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+    th { background: #3498db; color: #fff; }
+    input { width: 60px; padding: 4px; text-align: center; }
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      background: #3498db;
+      color: #fff;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    .btn:hover { background: #2980b9; }
+    .btn-danger { background: #e74c3c; }
+    .btn-danger:hover { background: #c0392b; }
+    .result {
+      margin: 15px 0;
+      font-weight: bold;
+      color: #27ae60;
+    }
   </style>
 </head>
 <body>
-
   <h1>Cashier Management</h1>
-  <div class="panel" id="infoPanel">
-    <div class="row flex-between">
-      <div>
-        <div><strong>Logged in as:</strong> <span id="usernameDisplay">—</span></div>
-        <div class="muted" id="shiftDisplay">Loading current open shift...</div>
-      </div>
-      <div style="text-align:right;">
-        <div id="shiftStatusBadge" class="status muted">—</div>
-        <div class="muted" id="salesInfo">Sales: —</div>
-        <div class="muted">Date: <span id="todayDate"></span></div>
-      </div>
-    </div>
+  
+  <div class="info">Cashier: <span id="cashierName"></span></div>
+  <div class="info">Shift: <span id="shiftName">Loading...</span></div>
+  <div class="info">Sales (Cash): <span id="salesTotal">0</span></div>
+
+  <div class="denomination-section">
+    <h3>MVR Denominations</h3>
+    <table>
+      <tr><th>Note</th><th>Count</th><th>Total</th></tr>
+      <tbody id="mvrTable"></tbody>
+    </table>
+    <div>Total MVR: <span id="mvrTotal">0</span></div>
   </div>
 
-  <div class="panel">
-    <div style="display:flex; gap:12px; align-items:center; justify-content:space-between;">
-      <div>
-        <label for="pettyCashInput">Set Petty Cash (MVR)</label>
-        <input id="pettyCashInput" type="number" min="0" step="0.01" value="0" />
-        <span class="muted"> (requires supervisor)</span>
-        <button id="verifySupervisorBtn" class="secondary">Verify Supervisor</button>
-        <span id="supervisorVerified" class="muted"></span>
-      </div>
-
-      <div>
-        <button id="openCashierBtn" class="secondary disabled" disabled>Open Cashier</button>
-        <button id="closeCashierBtn" class="danger disabled" disabled>Close Cashier</button>
-      </div>
-    </div>
-
-    <p class="note">Petty cash must match the counted petty cash amount and sales must equal counted sales to open/close cashier.</p>
+  <div class="denomination-section">
+    <h3>USD Denominations</h3>
+    <table>
+      <tr><th>Note</th><th>Count</th><th>Total</th></tr>
+      <tbody id="usdTable"></tbody>
+    </table>
+    <div>Total USD: <span id="usdTotal">0</span></div>
   </div>
 
-  <div class="panel currency-section">
-    <div class="card">
-      <h3>MVR Denominations</h3>
-      <table id="mvrTable">
-        <thead><tr><th>Denomination</th><th>Count</th><th>Subtotal</th></tr></thead>
-        <tbody></tbody>
-        <tfoot>
-          <tr><td class="total-line">Total MVR</td><td></td><td class="total-line" id="mvrTotal">0.00</td></tr>
-          <tr><td>Petty Cash Required</td><td></td><td id="pettyCashRequired">0.00</td></tr>
-        </tfoot>
-      </table>
-    </div>
-
-    <div class="card">
-      <h3>USD Denominations</h3>
-      <table id="usdTable">
-        <thead><tr><th>Denomination</th><th>Count</th><th>Subtotal</th></tr></thead>
-        <tbody></tbody>
-        <tfoot><tr><td class="total-line">Total USD</td><td></td><td class="total-line" id="usdTotal">0.00</td></tr></tfoot>
-      </table>
-    </div>
+  <div class="denomination-section">
+    <h3>Petty Cash</h3>
+    <input type="number" id="pettyCashInput" placeholder="Enter petty cash">
+    <button class="btn" onclick="setPettyCash()">Set (Supervisor)</button>
+    <div>Set Petty Cash: <span id="pettyCash">0</span></div>
   </div>
 
-  <div class="panel">
-    <div class="row">
-      <div style="flex:1">
-        <strong>Firebase write log</strong>
-        <pre id="logArea" style="height:80px; overflow:auto; background:#fafafa; padding:8px; border-radius:6px;">Ready.</pre>
-      </div>
-    </div>
-  </div>
+  <div class="result" id="checkResult"></div>
 
-<script>
-/*
-  IMPORTANT:
-  - This page expects that your firebase config + initialization is in an external file `fire2.js`
-    that is loaded BEFORE this script executes, and that it exposes a global Firestore instance called `db`.
-    Example minimal fire2.js (if using firebase v9 compat or v8):
-      // using v9 modular (example)
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-      import { getFirestore } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
-      const firebaseConfig = { /* your config * / };
-      const _app = initializeApp(firebaseConfig);
-      const db = getFirestore(_app);
-      window.db = db;
+  <button class="btn" onclick="openCashier()">Open Cashier</button>
+  <button class="btn btn-danger" onclick="closeCashier()">Close Cashier</button>
 
-    Or if your fire2.js sets window.db = firebase.firestore(); this also works.
+  <script>
+    const db = firebase.firestore();
 
-  - Collections expected:
-      shifts (documents with fields: shiftno, status)
-      payments (documents with fields: date (YYYY-MM-DD), shift, paymentMethod, total (number) )
-      users (documents with fields: username, role (e.g., 'supervisor'), password )  <-- used for supervisor verification
-    You can adapt field names to your schema.
+    // User info from login
+    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (!user) window.location.href = "login.html";
+    document.getElementById("cashierName").textContent = user.username;
 
-  - The page uses localStorage.getItem('username') to find the current user. If it's not found it will prompt you.
-*/
+    let currentShift = null;
+    let salesTotal = 0;
+    let pettyCash = 0;
 
-(async function init() {
-  // UI refs
-  const usernameDisplay = document.getElementById('usernameDisplay');
-  const shiftDisplay = document.getElementById('shiftDisplay');
-  const shiftStatusBadge = document.getElementById('shiftStatusBadge');
-  const salesInfo = document.getElementById('salesInfo');
-  const todayDateEl = document.getElementById('todayDate');
-  const mvrTableBody = document.querySelector('#mvrTable tbody');
-  const usdTableBody = document.querySelector('#usdTable tbody');
-  const mvrTotalEl = document.getElementById('mvrTotal');
-  const usdTotalEl = document.getElementById('usdTotal');
-  const pettyCashInput = document.getElementById('pettyCashInput');
-  const pettyCashRequiredEl = document.getElementById('pettyCashRequired');
-  const openBtn = document.getElementById('openCashierBtn');
-  const closeBtn = document.getElementById('closeCashierBtn');
-  const verifySupervisorBtn = document.getElementById('verifySupervisorBtn');
-  const supervisorVerified = document.getElementById('supervisorVerified');
-  const logArea = document.getElementById('logArea');
-
-  // helper log
-  function log(...args){ logArea.textContent = new Date().toLocaleString() + " — " + args.join(' ') + "\n" + logArea.textContent; }
-
-  // ensure Firestore db is available
-  if (typeof window.db === 'undefined') {
-    alert("ERROR: Firestore `db` not found. Make sure fire2.js loads and exposes `window.db` (Firestore instance).");
-    throw new Error("Firestore db not available");
-  }
-  const db = window.db;
-
-  // get username from local storage or prompt fallback
-  let username = localStorage.getItem('username');
-  if (!username) {
-    username = window.prompt("Enter your cashier username (will be stored locally for this page):", "");
-    if (!username) username = "unknown";
-    localStorage.setItem('username', username);
-  }
-  usernameDisplay.textContent = username;
-
-  // date (YYYY-MM-DD) using local timezone
-  const today = new Date();
-  const tzOffsetMin = today.getTimezoneOffset();
-  // produce local date ISO yyyy-mm-dd
-  const pad = n => String(n).padStart(2,'0');
-  const localISODate = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
-  todayDateEl.textContent = localISODate;
-
-  // denominations definitions
-  const MVR_DENOM = [1000,500,100,50,20,10,5,2,1];
-  // add 'coins' as free numeric amount
-  const USD_DENOM = [100,50,20,10,5,1,0.25,0.10,0.05,0.01];
-
-  // state
-  let currentOpenShift = null;
-  let salesTotalMVR = 0;    // total cash sales in MVR for today, for the open shift
-  let supervisorIsVerified = false;
-
-  // render denomination rows helper
-  function createDenRows(denoms, tbody, currency){
-    tbody.innerHTML = '';
-    denoms.forEach(d => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${currency} ${d}</td>
-        <td><input type="number" min="0" step="${d>=1 ? 1: 0.01}" data-den="${d}" class="countinput" value="0"></td>
-        <td class="subtotal">0.00</td>
-      `;
-      tbody.appendChild(tr);
-    });
-    // for MVR add coins/free entry
-    if (currency === 'MVR') {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>MVR coins / misc</td>
-        <td><input type="number" min="0" step="0.01" data-den="coins" class="countinput" value="0"></td>
-        <td class="subtotal">0.00</td>
-      `;
-      tbody.appendChild(tr);
+    // 🔹 Build denomination tables
+    const mvrDenoms = [1000, 500, 100, 50, 20, 10, 5, 2, 1];
+    const usdDenoms = [100, 50, 20, 10, 5, 1];
+    function buildTable(denoms, tableId, totalId) {
+      const tbody = document.getElementById(tableId);
+      denoms.forEach(val => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${val}</td>
+          <td><input type="number" min="0" value="0" data-value="${val}" onchange="updateTotal('${tableId}','${totalId}')"></td>
+          <td class="row-total">0</td>
+        `;
+        tbody.appendChild(row);
+      });
     }
-  }
+    buildTable(mvrDenoms, "mvrTable", "mvrTotal");
+    buildTable(usdDenoms, "usdTable", "usdTotal");
 
-  createDenRows(MVR_DENOM, mvrTableBody, 'MVR');
-  createDenRows(USD_DENOM, usdTableBody, 'USD');
-
-  function formatAmount(n){
-    // show 2 decimals
-    return Number(n || 0).toFixed(2);
-  }
-
-  // compute totals when counts change
-  function computeTotalsAndValidate(){
-    // MVR
-    let mvrTotal = 0;
-    mvrTableBody.querySelectorAll('tr').forEach(tr => {
-      const input = tr.querySelector('input.countinput');
-      if (!input) return;
-      const den = input.dataset.den;
-      const cnt = Number(input.value) || 0;
-      let subtotal = 0;
-      if (den === 'coins'){
-        subtotal = cnt;
-      } else {
-        subtotal = cnt * Number(den);
-      }
-      tr.querySelector('.subtotal').textContent = formatAmount(subtotal);
-      mvrTotal += subtotal;
-    });
-    mvrTotalEl.textContent = formatAmount(mvrTotal);
-
-    // USD
-    let usdTotal = 0;
-    usdTableBody.querySelectorAll('tr').forEach(tr => {
-      const input = tr.querySelector('input.countinput');
-      if (!input) return;
-      const den = Number(input.dataset.den);
-      const cnt = Number(input.value) || 0;
-      const subtotal = cnt * den;
-      tr.querySelector('.subtotal').textContent = formatAmount(subtotal);
-      usdTotal += subtotal;
-    });
-    usdTotalEl.textContent = formatAmount(usdTotal);
-
-    // petty cash required (MVR)
-    const pettyRequired = Number(pettyCashInput.value) || 0;
-    pettyCashRequiredEl.textContent = formatAmount(pettyRequired);
-
-    // decide whether open/close buttons enabled:
-    // criteria described by you:
-    // - petty cash counted (from MVR table coins+denoms) must equal pettyCashInput
-    // - counted sales (MVR) must equal sales fetched from firebase
-    const pettyCounted = mvrTotal;
-    const salesMatch = Math.abs(pettyCounted - pettyRequired) < 0.005 ? true : false; // petty counts vs required
-    const countedSalesMatch = Math.abs(mvrTotal - salesTotalMVR) < 0.005; // this compares total MVR to sales; adjust if you handle USD conversions
-    // NOTE: you said "denomination count for sales is equal to sales fetch" — we use MVR total here, adapt if sales are USD or need conversion
-    if (supervisorIsVerified && pettyRequired > 0 && salesTotalMVR >= 0 && pettyCounted === pettyCounted) {
-      // enable buttons only when petty matches AND counted sales equals fetched sales
-    }
-
-    const pettyMatches = Math.abs(pettyCounted - pettyRequired) < 0.005;
-    const salesMatches = Math.abs(mvrTotal - salesTotalMVR) < 0.005;
-
-    // Open cashier allowed when pettyMatches && salesMatches
-    if (pettyMatches && salesMatches && supervisorIsVerified) {
-      openBtn.classList.remove('disabled'); openBtn.disabled = false;
-      closeBtn.classList.remove('disabled'); closeBtn.disabled = false;
-    } else {
-      openBtn.classList.add('disabled'); openBtn.disabled = true;
-      closeBtn.classList.add('disabled'); closeBtn.disabled = true;
-    }
-
-    // show summary
-    const summaryText = `Counted MVR: ${formatAmount(mvrTotal)} — Required petty: ${formatAmount(pettyRequired)} — Sales(FB): ${formatAmount(salesTotalMVR)}`;
-    salesInfo.textContent = summaryText;
-  }
-
-  // attach input listeners
-  document.body.addEventListener('input', (e) => {
-    if (e.target && e.target.classList.contains('countinput')) {
-      computeTotalsAndValidate();
-    }
-  });
-  pettyCashInput.addEventListener('input', () => { computeTotalsAndValidate(); });
-
-  // Supervisor verification
-  verifySupervisorBtn.addEventListener('click', async () => {
-    const pwd = prompt("Supervisor password (this page will check 'users' collection for a 'supervisor' with this password):");
-    if (!pwd) return;
-    try {
-      // Query users collection for role == 'supervisor' and password == pwd
-      const usersRef = db.collection ? db.collection('users') : null;
-      if (!usersRef) throw new Error("Firestore client API mismatch: expected db.collection() style. Adapt this code to your fire2.js API.");
-
-      const q = usersRef.where('role','==','supervisor').where('password','==',pwd).limit(1);
-      const snap = await q.get();
-      if (!snap.empty) {
-        supervisorIsVerified = true;
-        supervisorVerified.textContent = `Supervisor verified`;
-        supervisorVerified.style.color = 'green';
-        log('Supervisor verified.');
-        computeTotalsAndValidate();
-      } else {
-        supervisorIsVerified = false;
-        supervisorVerified.textContent = `Supervisor NOT verified`;
-        supervisorVerified.style.color = 'red';
-        alert("Supervisor verification failed. Check password or users collection.");
-        log('Supervisor verification failed.');
-      }
-    } catch (err) {
-      console.error(err);
-      alert('Supervisor verification error: ' + (err.message || err));
-      log('Supervisor verification error:', err.message || err);
-    }
-  });
-
-  // fetch open shift
-  async function fetchOpenShift(){
-    shiftDisplay.textContent = 'Looking for open shift...';
-    try {
-      const shiftsRef = db.collection ? db.collection('shifts') : null;
-      if (!shiftsRef) throw new Error("Firestore client API mismatch: expected db.collection()");
-      const q = shiftsRef.where('status','==','open').limit(1);
-      const snap = await q.get();
-      if (!snap.empty) {
-        const doc = snap.docs[0];
-        const data = doc.data();
-        currentOpenShift = { id: doc.id, ...data };
-        shiftDisplay.textContent = `Open shift: ${data.shiftno || doc.id}`;
-        shiftStatusBadge.textContent = 'OPEN';
-        shiftStatusBadge.className = 'status open';
-        log('Found open shift: ' + (data.shiftno || doc.id));
-        return currentOpenShift;
-      } else {
-        currentOpenShift = null;
-        shiftDisplay.textContent = 'No open shift found';
-        shiftStatusBadge.textContent = 'NO OPEN SHIFT';
-        shiftStatusBadge.className = 'status closed';
-        log('No open shift found.');
-        return null;
-      }
-    } catch (err) {
-      shiftDisplay.textContent = 'Error loading shift';
-      shiftStatusBadge.textContent = 'ERROR';
-      console.error(err);
-      log('Error fetching shift: ' + err.message);
-      return null;
-    }
-  }
-
-  // fetch cash sales total for today and shift
-  async function fetchSalesTotalForShift(shiftno){
-    try {
-      const paymentsRef = db.collection ? db.collection('payments') : null;
-      if (!paymentsRef) throw new Error("Firestore client API mismatch: expected db.collection()");
-      // Query payments where date == localISODate, shift == shiftno, paymentMethod == 'Cash'
-      const q = paymentsRef
-        .where('date','==', localISODate)
-        .where('shift','==', shiftno)
-        .where('paymentMethod','==','Cash');
-      const snap = await q.get();
+    function updateTotal(tableId, totalId) {
       let total = 0;
-      snap.forEach(doc => {
-        const d = doc.data();
-        const t = Number(d.total) || 0;
-        total += t;
+      document.querySelectorAll(`#${tableId} tr`).forEach(row => {
+        const input = row.querySelector("input");
+        if (input) {
+          const count = parseInt(input.value) || 0;
+          const val = parseInt(input.dataset.value);
+          const rowTotal = count * val;
+          row.querySelector(".row-total").textContent = rowTotal;
+          total += rowTotal;
+        }
       });
-      log(`Fetched cash sales total for shift ${shiftno} on ${localISODate}: ${total}`);
-      return total;
-    } catch (err) {
-      console.error(err);
-      log('Error fetching payments: ' + err.message);
-      return 0;
+      document.getElementById(totalId).textContent = total;
+      checkValidation();
     }
-  }
 
-  // when open or close cashier clicked
-  async function handleCashierAction(action) {
-    if (!currentOpenShift) { alert('No open shift to attach cashier to.'); return; }
-    // re-check validation
-    const mvrCounted = Number(mvrTotalEl.textContent) || 0;
-    const pettyRequired = Number(pettyCashInput.value) || 0;
-    if (Math.abs(mvrCounted - pettyRequired) > 0.005) {
-      alert('Petty cash counted does not equal required petty cash.');
-      return;
-    }
-    if (Math.abs(mvrCounted - salesTotalMVR) > 0.005) {
-      // depending on your workflow you may want to allow slight differences. For now require exact.
-      alert('Counted sales (MVR total) does not equal sales fetched from Firebase. Fix counts or verify data.');
-      return;
-    }
-    // gather denomination details to save
-    const mvrDetails = [];
-    mvrTableBody.querySelectorAll('tr').forEach(tr => {
-      const input = tr.querySelector('input.countinput');
-      if (!input) return;
-      mvrDetails.push({
-        denom: input.dataset.den,
-        count: Number(input.value) || 0,
-        subtotal: Number(tr.querySelector('.subtotal').textContent) || 0
-      });
-    });
-    const usdDetails = [];
-    usdTableBody.querySelectorAll('tr').forEach(tr => {
-      const input = tr.querySelector('input.countinput');
-      if (!input) return;
-      usdDetails.push({
-        denom: Number(input.dataset.den),
-        count: Number(input.value) || 0,
-        subtotal: Number(tr.querySelector('.subtotal').textContent) || 0
-      });
+    // 🔹 Fetch current open shift
+    db.collection("shifts").where("status", "==", "open").onSnapshot(snap => {
+      if (!snap.empty) {
+        const data = snap.docs[0].data();
+        currentShift = data.shiftno;
+        document.getElementById("shiftName").textContent = currentShift;
+        loadSales();
+      } else {
+        document.getElementById("shiftName").textContent = "No shift open";
+      }
     });
 
-    // Compose document
-    const payload = {
-      shiftId: currentOpenShift.id,
-      shiftno: currentOpenShift.shiftno || currentOpenShift.id,
-      action: action, // 'open' or 'close'
-      cashier: username,
-      date: localISODate,
-      timestamp: new Date(),
-      mvrCountedTotal: Number(mvrTotalEl.textContent) || 0,
-      usdCountedTotal: Number(usdTotalEl.textContent) || 0,
-      pettyRequired: pettyRequired,
-      mvrDetails,
-      usdDetails
-    };
-
-    try {
-      // Save to collection 'currentCashier' doc id = shiftno (or shift id)
-      const coll = db.collection('currentCashier');
-      await coll.doc(String(payload.shiftno)).set(payload, { merge: true });
-      // Also update shifts doc to include current cashier info & status
-      await db.collection('shifts').doc(currentOpenShift.id).update({
-        currentCashier: username,
-        cashierStatus: action === 'open' ? 'open' : 'closed',
-        lastCashierActionAt: new Date()
-      });
-      log(`Saved cashier ${action} for shift ${payload.shiftno} by ${username}.`);
-      alert('Saved cashier ' + action + ' successfully.');
-    } catch (err) {
-      console.error(err);
-      log('Error saving cashier payload: ' + (err.message || err));
-      alert('Error saving: ' + (err.message || err));
+    // 🔹 Fetch today's sales (Cash only)
+    function loadSales() {
+      const today = new Date().toISOString().split("T")[0];
+      db.collection("payments")
+        .where("date", "==", today)
+        .where("shift", "==", currentShift)
+        .where("paymentType", "==", "Cash")
+        .onSnapshot(snap => {
+          let total = 0;
+          snap.forEach(doc => { total += doc.data().total || 0; });
+          salesTotal = total;
+          document.getElementById("salesTotal").textContent = total;
+          checkValidation();
+        });
     }
-  }
 
-  openBtn.addEventListener('click', () => handleCashierAction('open'));
-  closeBtn.addEventListener('click', () => handleCashierAction('close'));
+    // 🔹 Supervisor sets petty cash
+    function setPettyCash() {
+      const pass = prompt("Enter supervisor password:");
+      if (pass !== "super123") { // change password as needed
+        alert("Invalid supervisor password");
+        return;
+      }
+      pettyCash = parseFloat(document.getElementById("pettyCashInput").value) || 0;
+      document.getElementById("pettyCash").textContent = pettyCash;
+      checkValidation();
+    }
 
-  // initial load: find open shift & sales total
-  const shift = await fetchOpenShift();
-  if (shift) {
-    const shiftno = shift.shiftno || shift.id;
-    salesTotalMVR = await fetchSalesTotalForShift(shiftno);
-  } else {
-    salesTotalMVR = 0;
-  }
+    // 🔹 Check if cashier can open/close
+    function checkValidation() {
+      const mvr = parseFloat(document.getElementById("mvrTotal").textContent) || 0;
+      const usd = parseFloat(document.getElementById("usdTotal").textContent) || 0;
+      const result = document.getElementById("checkResult");
+      if (mvr === salesTotal && pettyCash > 0) {
+        result.textContent = "✅ Denominations match sales and petty cash set.";
+      } else {
+        result.textContent = "❌ Mismatch. Please check denominations or petty cash.";
+      }
+    }
 
-  // initialize petty cash display
-  pettyCashRequiredEl.textContent = formatAmount(Number(pettyCashInput.value) || 0);
-  computeTotalsAndValidate();
-
-  // Helper: recompute sales periodically in case payments are updated by other users (optional)
-  // setInterval(async () => {
-  //   if (currentOpenShift) {
-  //     salesTotalMVR = await fetchSalesTotalForShift(currentOpenShift.shiftno || currentOpenShift.id);
-  //     computeTotalsAndValidate();
-  //   }
-  // }, 10000);
-
-})();
-</script>
-
+    // 🔹 Save cashier open/close
+    function saveCashier(status) {
+      if (!currentShift) return alert("No shift open.");
+      const mvr = parseFloat(document.getElementById("mvrTotal").textContent) || 0;
+      const usd = parseFloat(document.getElementById("usdTotal").textContent) || 0;
+      db.collection("cashiers").add({
+        cashier: user.username,
+        shift: currentShift,
+        salesTotal: salesTotal,
+        pettyCash: pettyCash,
+        denomination: { MVR: mvr, USD: usd },
+        status: status,
+        timestamp: new Date().toISOString()
+      }).then(() => {
+        alert(`Cashier ${status} saved!`);
+      });
+    }
+    function openCashier() { saveCashier("open"); }
+    function closeCashier() { saveCashier("close"); }
+  </script>
 </body>
 </html>
