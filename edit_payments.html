@@ -363,18 +363,18 @@ async function loadBookings(query = null) {
   bookingsDiv.innerHTML = `
     <div class="loading">
       <i class="fas fa-spinner fa-spin"></i>
-      <p>Loading bookings...</p>
+      <p>Loading receipts...</p>
     </div>
   `;
   
   let snapshot;
   try {
     if(query){
-      snapshot = await db.collection("bookings")
+      snapshot = await db.collection("payments")
                          .where("receiptNo", "==", parseInt(query))
                          .get();
     } else {
-      snapshot = await db.collection("bookings")
+      snapshot = await db.collection("payments")
                          .orderBy("timestamp", "desc")
                          .get();
     }
@@ -450,7 +450,7 @@ async function loadBookings(query = null) {
     bookingsDiv.innerHTML = `
       <div style="color: #e74c3c; text-align: center; padding: 20px;">
         <i class="fas fa-exclamation-circle"></i>
-        <p>Error loading bookings: ${err.message}</p>
+        <p>Error loading receipts: ${err.message}</p>
       </div>
     `;
   }
@@ -458,10 +458,10 @@ async function loadBookings(query = null) {
 
 // Edit booking
 async function editBooking(docId){
-  const docRef = db.collection("bookings").doc(docId);
+  const docRef = db.collection("payments").doc(docId);
   const docSnap = await docRef.get();
   if(!docSnap.exists){ 
-    alert("Booking not found!"); 
+    alert("Receipt not found!"); 
     return; 
   }
   const data = docSnap.data();
@@ -493,10 +493,10 @@ async function editBooking(docId){
       kids: parseInt(newKids),
       paymentType: newPayment
     });
-    alert("Booking updated successfully!");
+    alert("Receipt updated successfully!");
     loadBookings();
   } catch(err){
-    alert("Error updating booking: " + err.message);
+    alert("Error updating receipt: " + err.message);
   }
 }
 
@@ -504,11 +504,11 @@ async function editBooking(docId){
 async function deleteBooking(docId){
   if(!confirm("Are you sure you want to delete this booking? This action cannot be undone.")) return;
   try{
-    await db.collection("bookings").doc(docId).delete();
-    alert("Booking deleted successfully!");
+    await db.collection("payments").doc(docId).delete();
+    alert("Receipt deleted successfully!");
     loadBookings();
   } catch(err){
-    alert("Error deleting booking: " + err.message);
+    alert("Error deleting receipt: " + err.message);
   }
 }
 
@@ -517,14 +517,14 @@ async function voidBooking(docId){
   const reason = prompt("Enter reason for voiding this receipt:");
   if(!reason) return;
   try{
-    await db.collection("bookings").doc(docId).update({
+    await db.collection("payments").doc(docId).update({
       voided: true,
       voidReason: reason
     });
-    alert("Booking voided successfully!");
+    alert("Receipt voided successfully!");
     loadBookings();
   } catch(err){
-    alert("Error voiding booking: " + err.message);
+    alert("Error voiding receipt: " + err.message);
   }
 }
 
