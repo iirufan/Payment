@@ -517,13 +517,13 @@
         .where("shift", "==", "Morning") // Adjust if shift field matches your naming
         .onSnapshot(snapshot => {
           const bookings = [];
-          snapshot.forEach(doc => bookings.push(doc.data()));
+          snapshot.forEach(doc => payments.push(doc.data()));
 
           // Total count
           document.getElementById("totalTransactions").textContent = bookings.length;
 
           // Pending = Visa (or card) missing approvalCode/batchNo
-          const pending = bookings.filter(b => 
+          const pending = payments.filter(b => 
             b.paymentType && b.paymentType.toLowerCase().includes("visa") &&
             (!b.approvalCode || !b.batchNo)
           );
