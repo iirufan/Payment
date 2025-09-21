@@ -6,7 +6,6 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 <script src="fire2.js"></script> <!-- Firebase config -->
-<script src="users.js"></script>  <!-- Supervisor/User list -->
 <style>
 body { font-family: Arial, sans-serif; padding: 20px; }
 h2 { margin-bottom: 10px; }
@@ -17,13 +16,7 @@ th { background-color: #f2f2f2; }
 input[type=number] { width: 60px; text-align: center; }
 .total-row { font-weight: bold; }
 .card { border: 1px solid #ccc; padding: 20px; border-radius: 10px; margin-bottom: 20px; max-width: 400px; }
-label { display: block; margin-bottom: 5px; }
-input[type=password], input[type=text] { width: 100%; padding: 5px; margin-bottom: 10px; }
-button { padding: 8px 12px; margin-top: 5px; }
-.success { color: green; }
-.error { color: red; }
 .summary { border: 1px solid #999; padding: 15px; margin-top: 20px; max-width: 500px; }
-.hidden { display:none; }
 </style>
 </head>
 <body>
@@ -37,14 +30,11 @@ button { padding: 8px 12px; margin-top: 5px; }
 <p>Total MVR Cash: <span id="totalMVR">Loading...</span></p>
 
 <div class="tables">
-  <!-- USD Denomination Table for Cash -->
   <table id="usdTable">
     <thead><tr><th>Denomination USD</th><th>Count</th><th>Total</th></tr></thead>
     <tbody></tbody>
     <tfoot><tr class="total-row"><td colspan="2">Grand Total</td><td id="usdGrandTotal">0.00</td></tr></tfoot>
   </table>
-
-  <!-- MVR Denomination Table for Cash -->
   <table id="mvrTable">
     <thead><tr><th>Denomination MVR</th><th>Count</th><th>Total</th></tr></thead>
     <tbody></tbody>
@@ -52,33 +42,18 @@ button { padding: 8px 12px; margin-top: 5px; }
   </table>
 </div>
 
-<!-- Supervisor Login -->
-<div class="card" id="supervisorLoginCard">
-  <h3>Supervisor Login</h3>
-  <label>Username:</label><input type="text" id="supUser"><br>
-  <label>Password:</label><input type="password" id="supPass"><br>
-  <button id="supLoginBtn">Login</button>
-  <p id="supMsg"></p>
-</div>
-
-<!-- Petty Cash Section (hidden initially) -->
-<div class="card hidden" id="setPettyCashCard">
-  <h2>Set Petty Cash</h2>
-  <label>Petty Cash USD Amount:</label><input type="number" id="pettyUSD" min="0"><br>
-  <label>Petty Cash MVR Amount:</label><input type="number" id="pettyMVR" min="0"><br>
-  <button id="setPettyCashBtn">Set Petty Cash</button>
-  <p id="message"></p>
+<div class="card">
+  <h2>Petty Cash</h2>
+  <p>USD: <span id="pettyUSD">Loading...</span></p>
+  <p>MVR: <span id="pettyMVR">Loading...</span></p>
 </div>
 
 <div class="tables">
-  <!-- USD Denomination Table for Petty Cash -->
   <table id="pettyUSDTable">
     <thead><tr><th>Denomination USD</th><th>Count</th><th>Total</th></tr></thead>
     <tbody></tbody>
     <tfoot><tr class="total-row"><td colspan="2">Grand Total</td><td id="pettyUSDGrandTotal">0.00</td></tr></tfoot>
   </table>
-
-  <!-- MVR Denomination Table for Petty Cash -->
   <table id="pettyMVRTable">
     <thead><tr><th>Denomination MVR</th><th>Count</th><th>Total</th></tr></thead>
     <tbody></tbody>
@@ -101,7 +76,6 @@ button { padding: 8px 12px; margin-top: 5px; }
 const usdDenoms = [100,50,20,10,5,1];
 const mvrDenoms = [1000,500,100,50,20,5,1];
 
-// Create Denomination Table
 function createDenominationTable(denoms, tbodySelector, grandTotalSelector){
   const tbody = document.querySelector(tbodySelector);
   const grandEl = document.querySelector(grandTotalSelector);
@@ -121,13 +95,12 @@ function createDenominationTable(denoms, tbodySelector, grandTotalSelector){
   });
 }
 
-// Create tables
 createDenominationTable(usdDenoms,"#usdTable tbody","#usdGrandTotal");
 createDenominationTable(mvrDenoms,"#mvrTable tbody","#mvrGrandTotal");
 createDenominationTable(usdDenoms,"#pettyUSDTable tbody","#pettyUSDGrandTotal");
 createDenominationTable(mvrDenoms,"#pettyMVRTable tbody","#pettyMVRGrandTotal");
 
-// Current Date
+// Current date
 const today=new Date();
 const yyyy=today.getFullYear(), mm=String(today.getMonth()+1).padStart(2,'0'), dd=String(today.getDate()).padStart(2,'0');
 const currentDate=`${yyyy}-${mm}-${dd}`;
@@ -145,63 +118,33 @@ db.collection("shifts").where("status","==","open").limit(1).onSnapshot(snap=>{
   const shiftName = shiftNo===1?"Morning":"Evening";
   shiftNoSpan.textContent=shiftNo;
 
-  // Fetch USD Cash
+  // Fetch cash USD
   db.collection("payments").where("date","==",currentDate).where("shift","==",shiftName).where("paymentType","==","Cash").where("currency","==","USD")
-    .onSnapshot(paySnap=>{let t=0;paySnap.forEach(d=>{const p=d.data();if(!p.voided)t+=Number(p.total||0)}); totalUSDEl.textContent=t.toFixed(2); updateSummary();});
-  // Fetch MVR Cash
+    .onSnapshot(paySnap=>{let t=0;paySnap.forEach(d=>{const p=d.data(); if(!p.voided) t+=Number(p.total||0)}); totalUSDEl.textContent=t.toFixed(2); updateSummary();});
+
+  // Fetch cash MVR
   db.collection("payments").where("date","==",currentDate).where("shift","==",shiftName).where("paymentType","==","Cash").where("currency","==","MVR")
-    .onSnapshot(paySnap=>{let t=0;paySnap.forEach(d=>{const p=d.data();if(!p.voided)t+=Number(p.total||0)}); totalMVREl.textContent=t.toFixed(2); updateSummary();});
+    .onSnapshot(paySnap=>{let t=0;paySnap.forEach(d=>{const p=d.data(); if(!p.voided) t+=Number(p.total||0)}); totalMVREl.textContent=t.toFixed(2); updateSummary();});
 });
 
-// Petty Cash
-const pettyUSDInput=document.getElementById("pettyUSD");
-const pettyMVRInput=document.getElementById("pettyMVR");
-const setBtn=document.getElementById("setPettyCashBtn");
-const msgEl=document.getElementById("message");
-const currentPettyUSD = document.getElementById("currentPettyUSD");
-const currentPettyMVR = document.getElementById("currentPettyMVR");
-
-const pettyDoc=db.collection("pettyCash").doc("current");
-pettyDoc.get().then(doc=>{if(!doc.exists){pettyDoc.set({USD:0,MVR:0});}});
-
-// Live fetch petty cash
-pettyDoc.onSnapshot(doc=>{
-  if(doc.exists){
-    const data = doc.data();
-    currentPettyUSD.textContent = data.USD?.toFixed(2)||"0.00";
-    currentPettyMVR.textContent = data.MVR?.toFixed(2)||"0.00";
+// Petty cash live fetch
+const pettyUSDEl = document.getElementById("pettyUSD");
+const pettyMVREl = document.getElementById("pettyMVR");
+db.collection("pettyCash").limit(1).onSnapshot(snap=>{
+  if(!snap.empty){
+    const data = snap.docs[0].data();
+    pettyUSDEl.textContent = Number(data.USD||0).toFixed(2);
+    pettyMVREl.textContent = Number(data.MVR||0).toFixed(2);
     updateSummary();
   }
 });
 
-// Supervisor login
-const supLoginBtn = document.getElementById("supLoginBtn");
-supLoginBtn.addEventListener("click",()=>{
-  const username = document.getElementById("supUser").value.trim();
-  const password = document.getElementById("supPass").value.trim();
-  const supMsg = document.getElementById("supMsg");
-  const validSupervisor = users.find(u=>u.username===username && u.password===password && u.Level==="Supervisor");
-  if(validSupervisor){
-    supMsg.textContent = "Supervisor login successful";
-    document.getElementById("setPettyCashCard").classList.remove("hidden");
-    document.getElementById("supervisorLoginCard").classList.add("hidden");
-  } else { supMsg.textContent="Invalid supervisor credentials"; }
-});
-
-// Set petty cash button
-setBtn.addEventListener("click",()=>{
-  const usdAmt = Number(pettyUSDInput.value);
-  const mvrAmt = Number(pettyMVRInput.value);
-  if(isNaN(usdAmt)||usdAmt<0||isNaN(mvrAmt)||mvrAmt<0){ msgEl.textContent="Enter valid amounts"; return;}
-  pettyDoc.set({USD:usdAmt,MVR:mvrAmt}).then(()=>{msgEl.textContent="Petty cash updated"; pettyUSDInput.value=""; pettyMVRInput.value="";});
-});
-
-// Reconciliation Summary
+// Reconciliation summary
 function updateSummary(){
   const totalCashUSD = Number(totalUSDEl.textContent) + Number(document.getElementById("usdGrandTotal").textContent);
   const totalCashMVR = Number(totalMVREl.textContent) + Number(document.getElementById("mvrGrandTotal").textContent);
-  const totalPettyUSD = Number(currentPettyUSD.textContent) + Number(document.getElementById("pettyUSDGrandTotal").textContent);
-  const totalPettyMVR = Number(currentPettyMVR.textContent) + Number(document.getElementById("pettyMVRGrandTotal").textContent);
+  const totalPettyUSD = Number(pettyUSDEl.textContent) + Number(document.getElementById("pettyUSDGrandTotal").textContent);
+  const totalPettyMVR = Number(pettyMVREl.textContent) + Number(document.getElementById("pettyMVRGrandTotal").textContent);
 
   document.getElementById("totalCashUSD").textContent = totalCashUSD.toFixed(2);
   document.getElementById("totalCashMVR").textContent = totalCashMVR.toFixed(2);
@@ -211,6 +154,5 @@ function updateSummary(){
   document.getElementById("grandTotalMVR").textContent = (totalCashMVR + totalPettyMVR).toFixed(2);
 }
 </script>
-
 </body>
 </html>
