@@ -2,201 +2,60 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Cashier Management</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Current Shift</title>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-  <script src="fire2.js"></script>
+  <script src="fire2.js"></script> <!-- your firebase config -->
   <style>
-    body { font-family: Arial, sans-serif; background: #f5f7fa; padding: 20px; }
-    h1 { text-align: center; color: #2c3e50; }
-    .info { margin: 5px 0; font-weight: bold; }
-    .section {
-      background: #fff; padding: 15px; margin: 15px 0;
-      border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .card {
+      border: 1px solid #ccc; 
+      padding: 20px; 
+      border-radius: 10px; 
+      max-width: 400px;
     }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-    th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
-    th { background: #3498db; color: #fff; }
-    input { width: 60px; text-align: center; }
-    .btn { padding: 10px 20px; border: none; border-radius: 6px;
-      background: #3498db; color: #fff; cursor: pointer; margin: 5px; }
-    .btn:hover { background: #2980b9; }
-    .btn-danger { background: #e74c3c; }
-    .btn-danger:hover { background: #c0392b; }
-    .result { margin: 10px 0; font-weight: bold; }
-    .ok { color: #27ae60; }
-    .fail { color: #e74c3c; }
+    .title { font-size: 20px; font-weight: bold; margin-bottom: 10px; }
+    .status { color: green; font-weight: bold; }
   </style>
 </head>
 <body>
-  <h1>Cashier Management</h1>
-
-  <div class="info">Cashier: <span id="cashierName"></span></div>
-  <div class="info">Shift: <span id="shiftInfo">Loading...</span></div>
-  <div class="info">Sales to Tally: <span id="salesToTally">0</span></div>
-  <div class="info">Petty Cash to Tally: <span id="pettyCashSet">0</span></div>
-
-  <!-- Sales Denominations -->
-  <div class="section">
-    <h3>Sales Denomination - MVR</h3>
-    <table><tr><th>Note</th><th>Entry</th><th>Total</th></tr><tbody id="salesMvrTable"></tbody></table>
-    <div>Total Sales MVR: <span id="salesMvrTotal">0</span></div>
-
-    <h3>Sales Denomination - USD</h3>
-    <table><tr><th>Note</th><th>Entry</th><th>Total</th></tr><tbody id="salesUsdTable"></tbody></table>
-    <div>Total Sales USD: <span id="salesUsdTotal">0</span></div>
+  <div class="card">
+    <div class="title">Current Shift</div>
+    <p><strong>Date:</strong> <span id="currentDate">Loading...</span></p>
+    <p><strong>Shift No:</strong> <span id="shiftNo">-</span></p>
+    <p><strong>User:</strong> <span id="user">-</span></p>
+    <p><strong>Status:</strong> <span id="status">-</span></p>
+    <p><strong>Start Time:</strong> <span id="startTime">-</span></p>
   </div>
-
-  <!-- Petty Cash Denominations -->
-  <div class="section">
-    <h3>Petty Cash Denomination - MVR</h3>
-    <table><tr><th>Note</th><th>Entry</th><th>Total</th></tr><tbody id="pettyMvrTable"></tbody></table>
-    <div>Total Petty MVR: <span id="pettyMvrTotal">0</span></div>
-
-    <h3>Petty Cash Denomination - USD</h3>
-    <table><tr><th>Note</th><th>Entry</th><th>Total</th></tr><tbody id="pettyUsdTable"></tbody></table>
-    <div>Total Petty USD: <span id="pettyUsdTotal">0</span></div>
-
-    <br>
-    <input type="number" id="pettyCashInput" placeholder="Set petty cash amount">
-    <button class="btn" onclick="setPettyCash()">Set (Supervisor)</button>
-  </div>
-
-  <div class="result" id="checkResult"></div>
-
-  <button class="btn" onclick="openCashier()">Open Cashier</button>
-  <button class="btn btn-danger" onclick="closeCashier()">Close Cashier</button>
 
   <script>
     const db = firebase.firestore();
-    const user = JSON.parse(localStorage.getItem("loggedInUser")) || { username: "Guest" };
-    document.getElementById("cashierName").textContent = user.username;
 
-    let currentShiftNo = null;
-    let salesTotal = 0;
-    let pettyCash = 0;
+    // Show today's date
+    document.getElementById("currentDate").textContent =
+      new Date().toLocaleDateString();
 
-    const mvrDenoms = [1000, 500, 100, 50, 20, 10, 5, 2, 1];
-    const usdDenoms = [100, 50, 20, 10, 5, 1];
-
-    // Build rows like "100 x [input] = total"
-    function buildTable(denoms, tableId, totalId) {
-      const tbody = document.getElementById(tableId);
-      denoms.forEach(val => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${val}</td>
-          <td>${val} x <input type="number" min="0" value="0" data-value="${val}" 
-                oninput="updateTotal('${tableId}','${totalId}')"></td>
-          <td class="row-total">0</td>
-        `;
-        tbody.appendChild(row);
-      });
-    }
-    buildTable(mvrDenoms, "salesMvrTable", "salesMvrTotal");
-    buildTable(usdDenoms, "salesUsdTable", "salesUsdTotal");
-    buildTable(mvrDenoms, "pettyMvrTable", "pettyMvrTotal");
-    buildTable(usdDenoms, "pettyUsdTable", "pettyUsdTotal");
-
-    function updateTotal(tableId, totalId) {
-      let total = 0;
-      document.querySelectorAll(`#${tableId} tr`).forEach(row => {
-        const input = row.querySelector("input");
-        if (input) {
-          const count = parseInt(input.value) || 0;
-          const val = parseInt(input.dataset.value);
-          const rowTotal = count * val;
-          row.querySelector(".row-total").textContent = rowTotal;
-          total += rowTotal;
+    // Get the current open shift
+    db.collection("shifts")
+      .where("status", "==", "open")
+      .orderBy("startTime", "desc")
+      .limit(1)
+      .onSnapshot(snapshot => {
+        if (snapshot.empty) {
+          document.getElementById("shiftNo").textContent = "No shift open";
+          document.getElementById("user").textContent = "-";
+          document.getElementById("status").textContent = "Closed";
+          document.getElementById("startTime").textContent = "-";
+        } else {
+          const shift = snapshot.docs[0].data();
+          document.getElementById("shiftNo").textContent = shift.shiftNo;
+          document.getElementById("user").textContent = shift.user;
+          document.getElementById("status").textContent = shift.status;
+          document.getElementById("startTime").textContent =
+            shift.startTime.toDate().toLocaleString();
         }
       });
-      document.getElementById(totalId).textContent = total;
-      checkValidation();
-    }
-
-    // Fetch current open shift
-    db.collection("shifts").where("status", "==", "open").onSnapshot(snap => {
-      if (!snap.empty) {
-        const data = snap.docs[0].data();
-        currentShiftNo = data.shiftNo; // FIX: use correct field
-        const start = data.startTime.toDate().toLocaleString();
-        document.getElementById("shiftInfo").textContent =
-          `Shift ${currentShiftNo} (${start}) by ${data.user}`;
-        loadSales();
-      } else {
-        document.getElementById("shiftInfo").textContent = "No shift open";
-      }
-    });
-
-    // Fetch sales (Cash, current shiftNo, today, not voided)
-    function loadSales() {
-      const today = new Date().toISOString().split("T")[0];
-      db.collection("payments")
-        .where("date", "==", today)
-        .where("shiftNo", "==", currentShiftNo)
-        .where("paymentType", "==", "Cash")
-        .where("voided", "==", false)
-        .onSnapshot(snap => {
-          let total = 0;
-          snap.forEach(doc => { total += doc.data().total || 0; });
-          salesTotal = total;
-          document.getElementById("salesToTally").textContent = total;
-          checkValidation();
-        });
-    }
-
-    function setPettyCash() {
-      const pass = prompt("Enter supervisor password:");
-      if (pass !== "super123") {
-        alert("Invalid supervisor password");
-        return;
-      }
-      pettyCash = parseFloat(document.getElementById("pettyCashInput").value) || 0;
-      document.getElementById("pettyCashSet").textContent = pettyCash;
-      checkValidation();
-    }
-
-    function checkValidation() {
-      const salesMvr = parseFloat(document.getElementById("salesMvrTotal").textContent) || 0;
-      const salesUsd = parseFloat(document.getElementById("salesUsdTotal").textContent) || 0;
-      const pettyMvr = parseFloat(document.getElementById("pettyMvrTotal").textContent) || 0;
-      const pettyUsd = parseFloat(document.getElementById("pettyUsdTotal").textContent) || 0;
-
-      let salesOk = (salesMvr === salesTotal);
-      let pettyOk = (pettyMvr === pettyCash);
-
-      const result = document.getElementById("checkResult");
-      if (salesOk && pettyOk) {
-        result.textContent = "✅ Denominations match Sales & Petty Cash";
-        result.className = "result ok";
-      } else {
-        result.textContent = "❌ Denominations do not tally";
-        result.className = "result fail";
-      }
-    }
-
-    function saveCashier(status) {
-      if (!currentShiftNo) return alert("No shift open.");
-      const salesMvr = parseFloat(document.getElementById("salesMvrTotal").textContent) || 0;
-      const salesUsd = parseFloat(document.getElementById("salesUsdTotal").textContent) || 0;
-      const pettyMvr = parseFloat(document.getElementById("pettyMvrTotal").textContent) || 0;
-      const pettyUsd = parseFloat(document.getElementById("pettyUsdTotal").textContent) || 0;
-
-      db.collection("cashiers").add({
-        cashier: user.username,
-        shiftNo: currentShiftNo,
-        salesToTally: salesTotal,
-        pettyCashSet: pettyCash,
-        salesDenomination: { MVR: salesMvr, USD: salesUsd },
-        pettyDenomination: { MVR: pettyMvr, USD: pettyUsd },
-        status: status,
-        timestamp: new Date()
-      }).then(() => {
-        alert(`Cashier ${status} saved`);
-      });
-    }
-    function openCashier() { saveCashier("open"); }
-    function closeCashier() { saveCashier("close"); }
   </script>
 </body>
 </html>
