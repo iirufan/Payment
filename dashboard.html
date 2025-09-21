@@ -465,82 +465,83 @@
     </div>
   </div>
 
-  <script>
-    // Set current date
-    const now = new Date();
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
-    
-    // Check if user is logged in
-    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+ <script>
+  // Set current date
+  const now = new Date();
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
+  
+  // Check if user is logged in
+  const user = JSON.parse(localStorage.getItem("loggedInUser"));
 
-    if (user) {
-      document.getElementById("sidebarUsername").textContent = user.username;
-      document.getElementById("sidebarLevel").textContent = user.Level;
+  if (user) {
+    document.getElementById("sidebarUsername").textContent = user.username;
+    document.getElementById("sidebarLevel").textContent = user.Level;
+  } else {
+    window.location.href = "login.html";
+  }
+
+  function logout() {
+    localStorage.removeItem("loggedInUser");
+    window.location.href = "login.html";
+  }
+
+  // 🔹 Firestore references
+  const shiftsRef = db.collection("shifts");
+  const paymentsRef = db.collection("payments"); // updated collection name
+
+  let currentShiftName = null;
+
+  // 🔹 Get current shift
+  shiftsRef.where("status", "==", "open").onSnapshot(snapshot => {
+    if (!snapshot.empty) {
+      const doc = snapshot.docs[0].data();
+      currentShiftName = "Shift1"; // always display Shift1
+      document.getElementById("currentShift").textContent = "Shift 1";
+      loadPayments(); // reload payments when shift is known
     } else {
-      window.location.href = "login.html";
+      currentShiftName = null;
+      document.getElementById("currentShift").textContent = "No shift open";
+      document.getElementById("totalTransactions").textContent = "0";
     }
+  });
 
-    function logout() {
-      localStorage.removeItem("loggedInUser");
-      window.location.href = "login.html";
-    }
+  // 🔹 Load today's payments for current shift
+  function loadPayments() {
+    if (!currentShiftName) return;
 
-    // 🔹 Firestore references
-    const shiftsRef = db.collection("shifts");
-    const bookingsRef = db.collection("payments");
+    // Get today’s date in YYYY-MM-DD format
+    const today = new Date().toISOString().split("T")[0];
 
-    let currentShiftName = null;
+    paymentsRef.where("date", "==", today)
+      .where("shift", "==", "Morning") // Adjust if shift field matches your naming
+      .onSnapshot(snapshot => {
+        const payments = [];
+        snapshot.forEach(doc => payments.push(doc.data()));
 
-    // 🔹 Get current shift
-    shiftsRef.where("status", "==", "open").onSnapshot(snapshot => {
-      if (!snapshot.empty) {
-        const doc = snapshot.docs[0].data();
-        currentShiftName = "Shift1"; // always display Shift1
-        document.getElementById("currentShift").textContent = "Shift 1";
-        loadBookings(); // reload bookings when shift is known
-      } else {
-        currentShiftName = null;
-        document.getElementById("currentShift").textContent = "No shift open";
-        document.getElementById("totalTransactions").textContent = "0";
-      }
-    });
+        // Total count
+        document.getElementById("totalTransactions").textContent = payments.length;
 
-    // 🔹 Load today's bookings for current shift
-    function loadBookings() {
-      if (!currentShiftName) return;
+        // Pending = Visa (or card) missing approvalCode/batchNo
+        const pending = payments.filter(p => 
+          p.paymentType && p.paymentType.toLowerCase().includes("visa") &&
+          (!p.approvalCode || !p.batchNo)
+        );
 
-      // Get today’s date in YYYY-MM-DD format
-      const today = new Date().toISOString().split("T")[0];
+        document.getElementById("pendingCount").textContent = pending.length;
+        
+        const notif = document.getElementById("pendingNotification");
+        const notifText = document.getElementById("notificationText");
+        
+        if (pending.length > 0) {
+          notif.style.display = "flex";
+          notifText.textContent = `You have ${pending.length} pending card payment(s) that require approval code and batch number.`;
+        } else {
+          notif.style.display = "none";
+        }
+      });
+  }
+</script>
 
-      bookingsRef.where("date", "==", today)
-        .where("shift", "==", "Morning") // Adjust if shift field matches your naming
-        .onSnapshot(snapshot => {
-          const payments = [];
-          snapshot.forEach(doc => payments.push(doc.data()));
-
-          // Total count
-          document.getElementById("totalTransactions").textContent = bookings.length;
-
-          // Pending = Visa (or card) missing approvalCode/batchNo
-          const pending = payments.filter(b => 
-            b.paymentType && b.paymentType.toLowerCase().includes("visa") &&
-            (!b.approvalCode || !b.batchNo)
-          );
-
-          document.getElementById("pendingCount").textContent = pending.length;
-          
-          const notif = document.getElementById("pendingNotification");
-          const notifText = document.getElementById("notificationText");
-          
-          if (pending.length > 0) {
-            notif.style.display = "flex";
-            notifText.textContent = `You have ${pending.length} pending card payment(s) that require approval code and batch number.`;
-          } else {
-            notif.style.display = "none";
-          }
-        });
-    }
-  </script>
 </body>
 </html>
