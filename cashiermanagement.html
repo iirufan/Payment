@@ -2,58 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Current Shift</title>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
   <script src="fire2.js"></script> <!-- your firebase config -->
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    .card {
-      border: 1px solid #ccc; 
-      padding: 20px; 
-      border-radius: 10px; 
-      max-width: 400px;
-    }
-    .title { font-size: 20px; font-weight: bold; margin-bottom: 10px; }
-    .status { color: green; font-weight: bold; }
-  </style>
 </head>
 <body>
-  <div class="card">
-    <div class="title">Current Shift</div>
-    <p><strong>Date:</strong> <span id="currentDate">Loading...</span></p>
-    <p><strong>Shift No:</strong> <span id="shiftNo">-</span></p>
-    <p><strong>User:</strong> <span id="user">-</span></p>
-    <p><strong>Status:</strong> <span id="status">-</span></p>
-    <p><strong>Start Time:</strong> <span id="startTime">-</span></p>
-  </div>
+  <p>Current Shift No: <span id="shiftNo">Loading...</span></p>
 
   <script>
-    const db = firebase.firestore();
-
-    // Show today's date
-    document.getElementById("currentDate").textContent =
-      new Date().toLocaleDateString();
-
-    // Get the current open shift
+    // db is already available from fire2.js
     db.collection("shifts")
       .where("status", "==", "open")
-      .orderBy("startTime", "desc")
       .limit(1)
       .onSnapshot(snapshot => {
         if (snapshot.empty) {
           document.getElementById("shiftNo").textContent = "No shift open";
-          document.getElementById("user").textContent = "-";
-          document.getElementById("status").textContent = "Closed";
-          document.getElementById("startTime").textContent = "-";
         } else {
           const shift = snapshot.docs[0].data();
           document.getElementById("shiftNo").textContent = shift.shiftNo;
-          document.getElementById("user").textContent = shift.user;
-          document.getElementById("status").textContent = shift.status;
-          document.getElementById("startTime").textContent =
-            shift.startTime.toDate().toLocaleString();
         }
       });
   </script>
