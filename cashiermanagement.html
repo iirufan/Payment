@@ -17,11 +17,11 @@
     <div class="title">Current Shift Payments</div>
     <p>Current Date: <span id="currentDate">Loading...</span></p>
     <p>Current Shift No: <span id="shiftNo">Loading...</span></p>
-    <p>Total Payments: <span id="totalPayments">Loading...</span></p>
+    <p>Total Payments (after voids): <span id="totalPayments">Loading...</span></p>
   </div>
 
   <script>
-    // Get today's date in YYYY-MM-DD format (matching 'date' in payments collection)
+    // Get today's date in YYYY-MM-DD format
     const today = new Date();
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -57,7 +57,11 @@
           .onSnapshot(paySnapshot => {
             let total = 0;
             paySnapshot.forEach(doc => {
-              total += Number(doc.data().total || 0);
+              const payment = doc.data();
+              // Only add payments that are not voided
+              if (!payment.voided) {
+                total += Number(payment.total || 0);
+              }
             });
             totalSpan.textContent = total.toFixed(2);
           }, err => {
