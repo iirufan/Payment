@@ -2,26 +2,73 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Current Shift</title>
+  <title>Current Shift Payments</title>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
   <script src="fire2.js"></script> <!-- your firebase config -->
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .card { border: 1px solid #ccc; padding: 20px; border-radius: 10px; max-width: 400px; }
+    .title { font-size: 20px; font-weight: bold; margin-bottom: 10px; }
+  </style>
 </head>
 <body>
-  <p>Current Shift No: <span id="shiftNo">Loading...</span></p>
+  <div class="card">
+    <div class="title">Current Shift Payments</div>
+    <p>Current Date: <span id="currentDate">Loading...</span></p>
+    <p>Current Shift No: <span id="shiftNo">Loading...</span></p>
+    <p>Total Payments: <span id="totalPayments">Loading...</span></p>
+  </div>
 
   <script>
-    // db is already available from fire2.js
+    // Get today's date in YYYY-MM-DD format (matching 'date' in payments collection)
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const currentDate = `${yyyy}-${mm}-${dd}`;
+
+    document.getElementById("currentDate").textContent = currentDate;
+
+    const shiftNoSpan = document.getElementById("shiftNo");
+    const totalSpan = document.getElementById("totalPayments");
+
+    // Fetch the current open shift
     db.collection("shifts")
       .where("status", "==", "open")
       .limit(1)
       .onSnapshot(snapshot => {
         if (snapshot.empty) {
-          document.getElementById("shiftNo").textContent = "No shift open";
-        } else {
-          const shift = snapshot.docs[0].data();
-          document.getElementById("shiftNo").textContent = shift.shiftNo;
+          shiftNoSpan.textContent = "No shift open";
+          totalSpan.textContent = "0.00";
+          return;
         }
+
+        const shiftData = snapshot.docs[0].data();
+        const shiftNo = shiftData.shiftNo;
+        const shiftName = shiftNo === 1 ? "Morning" : "Evening";
+
+        shiftNoSpan.textContent = shiftNo;
+
+        // Fetch payments for current date and shift
+        db.collection("payments")
+          .where("date", "==", currentDate)
+          .where("shift", "==", shiftName)
+          .onSnapshot(paySnapshot => {
+            let total = 0;
+            paySnapshot.forEach(doc => {
+              total += Number(doc.data().total || 0);
+            });
+            totalSpan.textContent = total.toFixed(2);
+          }, err => {
+            console.error(err);
+            totalSpan.textContent = "Error fetching payments";
+          });
+
+      }, err => {
+        console.error(err);
+        shiftNoSpan.textContent = "Error fetching shift";
+        totalSpan.textContent = "-";
       });
   </script>
 </body>
