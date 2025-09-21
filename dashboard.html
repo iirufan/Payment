@@ -53,38 +53,54 @@
 
     // 🔹 Firestore references
     const shiftsRef = db.collection("shifts");
-    const transactionsRef = db.collection("transactions");
+    const bookingsRef = db.collection("bookings");
 
-    // 🔹 Current shift (find where status == "open")
+    let currentShiftName = null;
+
+    // 🔹 Get current shift
     shiftsRef.where("status", "==", "open").onSnapshot(snapshot => {
       if (!snapshot.empty) {
         const doc = snapshot.docs[0].data();
-        document.getElementById("currentShift").textContent = 
-          `Shift ${doc.shiftNo} (User: ${doc.user})`;
+        currentShiftName = "Shift1"; // always display Shift1
+        document.getElementById("currentShift").textContent = "Shift 1";
+        loadBookings(); // reload bookings when shift is known
       } else {
+        currentShiftName = null;
         document.getElementById("currentShift").textContent = "No shift open";
+        document.getElementById("totalTransactions").textContent = "0";
       }
     });
 
-    // 🔹 Transactions
-    transactionsRef.onSnapshot(snapshot => {
-      const transactions = [];
-      snapshot.forEach(doc => transactions.push(doc.data()));
+    // 🔹 Load today's bookings for current shift
+    function loadBookings() {
+      if (!currentShiftName) return;
 
-      document.getElementById("totalTransactions").textContent = transactions.length;
+      // Get today’s date in YYYY-MM-DD format
+      const today = new Date().toISOString().split("T")[0];
 
-      // Pending = card payments missing approvalCode OR batchNo
-      const pending = transactions.filter(t => 
-        t.paymentMethod === "Card" && (!t.approvalCode || !t.batchNo)
-      );
+      bookingsRef.where("date", "==", today)
+        .where("shift", "==", "Morning") // Adjust if shift field matches your naming
+        .onSnapshot(snapshot => {
+          const bookings = [];
+          snapshot.forEach(doc => bookings.push(doc.data()));
 
-      const notif = document.getElementById("pendingNotification");
-      if (pending.length > 0) {
-        notif.innerHTML = `<div class="notification">⚠️ ${pending.length} pending card updates!</div>`;
-      } else {
-        notif.innerHTML = "";
-      }
-    });
+          // Total count
+          document.getElementById("totalTransactions").textContent = bookings.length;
+
+          // Pending = Visa (or card) missing approvalCode/batchNo
+          const pending = bookings.filter(b => 
+            b.paymentType && b.paymentType.toLowerCase().includes("visa") &&
+            (!b.approvalCode || !b.batchNo)
+          );
+
+          const notif = document.getElementById("pendingNotification");
+          if (pending.length > 0) {
+            notif.innerHTML = `<div class="notification">⚠️ ${pending.length} pending card updates!</div>`;
+          } else {
+            notif.innerHTML = "";
+          }
+        });
+    }
   </script>
 </body>
 </html>
