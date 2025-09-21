@@ -2,82 +2,449 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cash & Petty Cash Management</title>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 <script src="fire2.js"></script> <!-- Firebase config -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-body { font-family: Arial, sans-serif; padding: 20px; }
-h2 { margin-bottom: 10px; }
-.tables { display: flex; gap: 40px; margin-bottom: 30px; flex-wrap: wrap; }
-table { border-collapse: collapse; width: 250px; margin-bottom: 20px; }
-th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-th { background-color: #f2f2f2; }
-input[type=number] { width: 60px; text-align: center; }
-.total-row { font-weight: bold; }
-.card { border: 1px solid #ccc; padding: 20px; border-radius: 10px; margin-bottom: 20px; max-width: 400px; }
-.summary { border: 1px solid #999; padding: 15px; margin-top: 20px; max-width: 500px; }
-button { padding: 8px 12px; margin-top: 5px; }
+:root {
+  --primary: #2c3e50;
+  --secondary: #3498db;
+  --success: #2ecc71;
+  --danger: #e74c3c;
+  --warning: #f39c12;
+  --light: #ecf0f1;
+  --dark: #2c3e50;
+  --gray: #95a5a6;
+  --card-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  --transition: all 0.3s ease;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f5f7fa;
+  color: #333;
+  line-height: 1.6;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.header {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 25px;
+  box-shadow: var(--card-shadow);
+}
+
+.header h1 {
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-item strong {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.info-item span {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.card {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: var(--card-shadow);
+  transition: var(--transition);
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.card-header h2 {
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-content {
+  min-height: 100px;
+}
+
+.amount {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--secondary);
+  margin: 10px 0;
+}
+
+.currency {
+  font-size: 0.9rem;
+  color: var(--gray);
+}
+
+.tables-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.denomination-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.denomination-table th {
+  background-color: var(--primary);
+  color: white;
+  padding: 12px;
+  text-align: center;
+}
+
+.denomination-table td {
+  padding: 10px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+}
+
+.denomination-table tr:last-child td {
+  border-bottom: none;
+}
+
+.denomination-table input {
+  width: 70px;
+  padding: 8px;
+  text-align: center;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  transition: var(--transition);
+}
+
+.denomination-table input:focus {
+  border-color: var(--secondary);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.total-row {
+  background-color: #f8f9fa;
+  font-weight: bold;
+}
+
+.summary {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: var(--card-shadow);
+  margin-bottom: 25px;
+}
+
+.summary h2 {
+  color: var(--primary);
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.summary-item.total {
+  background: var(--primary);
+  color: white;
+  font-weight: bold;
+}
+
+.cashier-card {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: var(--card-shadow);
+}
+
+.cashier-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background-color: var(--secondary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2980b9;
+}
+
+.btn-success {
+  background-color: var(--success);
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #27ae60;
+}
+
+.btn-danger {
+  background-color: var(--danger);
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #c0392b;
+}
+
+.btn:disabled {
+  background-color: var(--gray);
+  cursor: not-allowed;
+}
+
+.status-message {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.status-success {
+  background-color: rgba(46, 204, 113, 0.2);
+  color: var(--success);
+}
+
+.status-error {
+  background-color: rgba(231, 76, 60, 0.2);
+  color: var(--danger);
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+  
+  .tables-section {
+    grid-template-columns: 1fr;
+  }
+  
+  .header-info {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
 </style>
 </head>
 <body>
+<div class="container">
+  <header class="header">
+    <h1><i class="fas fa-cash-register"></i> Cash & Petty Cash Management</h1>
+    <div class="header-info">
+      <div class="info-item">
+        <strong>Current Date</strong>
+        <span id="currentDate">Loading...</span>
+      </div>
+      <div class="info-item">
+        <strong>Current Shift No</strong>
+        <span id="shiftNo">Loading...</span>
+      </div>
+      <div class="info-item">
+        <strong>Logged in User</strong>
+        <span id="sidebarUsername">Loading...</span>
+      </div>
+      <div class="info-item">
+        <strong>Level</strong>
+        <span id="sidebarLevel">Loading...</span>
+      </div>
+    </div>
+  </header>
 
-<h2>Shift & Date Info</h2>
-<p>Current Date: <span id="currentDate">Loading...</span></p>
-<p>Current Shift No: <span id="shiftNo">Loading...</span></p>
+  <div class="dashboard">
+    <div class="card">
+      <div class="card-header">
+        <h2><i class="fas fa-money-bill-wave"></i> Cash Payments</h2>
+      </div>
+      <div class="card-content">
+        <p>Total USD Cash: <span class="amount" id="totalUSD">0.00</span> <span class="currency">USD</span></p>
+        <p>Total MVR Cash: <span class="amount" id="totalMVR">0.00</span> <span class="currency">MVR</span></p>
+      </div>
+    </div>
 
-<h2>Cash Payments from Firebase</h2>
-<p>Total USD Cash: <span id="totalUSD">Loading...</span></p>
-<p>Total MVR Cash: <span id="totalMVR">Loading...</span></p>
+    <div class="card">
+      <div class="card-header">
+        <h2><i class="fas fa-wallet"></i> Petty Cash (Live)</h2>
+      </div>
+      <div class="card-content">
+        <p>USD: <span class="amount" id="pettyUSD">0.00</span> <span class="currency">USD</span></p>
+        <p>MVR: <span class="amount" id="pettyMVR">0.00</span> <span class="currency">MVR</span></p>
+      </div>
+    </div>
 
-<div class="tables">
-  <table id="usdTable">
-    <thead><tr><th>Denomination USD</th><th>Count</th><th>Total</th></tr></thead>
-    <tbody></tbody>
-    <tfoot><tr class="total-row"><td colspan="2">Grand Total</td><td id="usdGrandTotal">0.00</td></tr></tfoot>
-  </table>
-  <table id="mvrTable">
-    <thead><tr><th>Denomination MVR</th><th>Count</th><th>Total</th></tr></thead>
-    <tbody></tbody>
-    <tfoot><tr class="total-row"><td colspan="2">Grand Total</td><td id="mvrGrandTotal">0.00</td></tr></tfoot>
-  </table>
-</div>
+    <div class="card cashier-card">
+      <div class="card-header">
+        <h2><i class="fas fa-user-tie"></i> Cashier Status</h2>
+      </div>
+      <div class="card-content">
+        <div class="cashier-info">
+          <div>
+            <p>Status: <span id="cashierStatus">Loading...</span></p>
+          </div>
+          <button id="cashierBtn" class="btn" disabled>Loading...</button>
+        </div>
+        <div id="cashierMsg" class="status-message"></div>
+      </div>
+    </div>
+  </div>
 
-<div class="card">
-  <h2>Petty Cash (Live)</h2>
-  <p>USD: <span id="pettyUSD">Loading...</span></p>
-  <p>MVR: <span id="pettyMVR">Loading...</span></p>
-</div>
+  <div class="tables-section">
+    <div class="card">
+      <div class="card-header">
+        <h2><i class="fas fa-coins"></i> Cash Count - USD</h2>
+      </div>
+      <table class="denomination-table" id="usdTable">
+        <thead><tr><th>Denomination USD</th><th>Count</th><th>Total</th></tr></thead>
+        <tbody></tbody>
+        <tfoot><tr class="total-row"><td colspan="2">Grand Total</td><td id="usdGrandTotal">0.00</td></tr></tfoot>
+      </table>
+    </div>
 
-<div class="tables">
-  <table id="pettyUSDTable">
-    <thead><tr><th>Denomination USD</th><th>Count</th><th>Total</th></tr></thead>
-    <tbody></tbody>
-    <tfoot><tr class="total-row"><td colspan="2">Grand Total</td><td id="pettyUSDGrandTotal">0.00</td></tr></tfoot>
-  </table>
-  <table id="pettyMVRTable">
-    <thead><tr><th>Denomination MVR</th><th>Count</th><th>Total</th></tr></thead>
-    <tbody></tbody>
-    <tfoot><tr class="total-row"><td colspan="2">Grand Total</td><td id="pettyMVRGrandTotal">0.00</td></tr></tfoot>
-  </table>
-</div>
+    <div class="card">
+      <div class="card-header">
+        <h2><i class="fas fa-coins"></i> Cash Count - MVR</h2>
+      </div>
+      <table class="denomination-table" id="mvrTable">
+        <thead><tr><th>Denomination MVR</th><th>Count</th><th>Total</th></tr></thead>
+        <tbody></tbody>
+        <tfoot><tr class="total-row"><td colspan="2">Grand Total</td><td id="mvrGrandTotal">0.00</td></tr></tfoot>
+      </table>
+    </div>
 
-<div class="summary">
-  <h2>Reconciliation Summary</h2>
-  <p>Total Cash USD: <span id="totalCashUSD">0.00</span></p>
-  <p>Total Cash MVR: <span id="totalCashMVR">0.00</span></p>
-  <p>Total Petty Cash USD: <span id="totalPettyUSD">0.00</span></p>
-  <p>Total Petty Cash MVR: <span id="totalPettyMVR">0.00</span></p>
-  <p>Grand Total USD: <span id="grandTotalUSD">0.00</span></p>
-  <p>Grand Total MVR: <span id="grandTotalMVR">0.00</span></p>
-</div>
+    <div class="card">
+      <div class="card-header">
+        <h2><i class="fas fa-money-bill-alt"></i> Petty Cash Count - USD</h2>
+      </div>
+      <table class="denomination-table" id="pettyUSDTable">
+        <thead><tr><th>Denomination USD</th><th>Count</th><th>Total</th></tr></thead>
+        <tbody></tbody>
+        <tfoot><tr class="total-row"><td colspan="2">Grand Total</td><td id="pettyUSDGrandTotal">0.00</td></tr></tfoot>
+      </table>
+    </div>
 
-<div class="card">
-  <h2>Cashier Status</h2>
-  <p>Logged in User: <span id="sidebarUsername">Loading...</span></p>
-  <p>Level: <span id="sidebarLevel">Loading...</span></p>
-  <button id="cashierBtn" disabled>Loading...</button>
-  <p id="cashierMsg"></p>
+    <div class="card">
+      <div class="card-header">
+        <h2><i class="fas fa-money-bill-alt"></i> Petty Cash Count - MVR</h2>
+      </div>
+      <table class="denomination-table" id="pettyMVRTable">
+        <thead><tr><th>Denomination MVR</th><th>Count</th><th>Total</th></tr></thead>
+        <tbody></tbody>
+        <tfoot><tr class="total-row"><td colspan="2">Grand Total</td><td id="pettyMVRGrandTotal">0.00</td></tr></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div class="summary">
+    <h2><i class="fas fa-calculator"></i> Reconciliation Summary</h2>
+    <div class="summary-grid">
+      <div class="summary-item">
+        <span>Total Cash USD:</span>
+        <span id="totalCashUSD">0.00</span>
+      </div>
+      <div class="summary-item">
+        <span>Total Cash MVR:</span>
+        <span id="totalCashMVR">0.00</span>
+      </div>
+      <div class="summary-item">
+        <span>Total Petty Cash USD:</span>
+        <span id="totalPettyUSD">0.00</span>
+      </div>
+      <div class="summary-item">
+        <span>Total Petty Cash MVR:</span>
+        <span id="totalPettyMVR">0.00</span>
+      </div>
+      <div class="summary-item total">
+        <span>Grand Total USD:</span>
+        <span id="grandTotalUSD">0.00</span>
+      </div>
+      <div class="summary-item total">
+        <span>Grand Total MVR:</span>
+        <span id="grandTotalMVR">0.00</span>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -121,7 +488,12 @@ const totalUSDEl = document.getElementById("totalUSD");
 const totalMVREl = document.getElementById("totalMVR");
 
 db.collection("shifts").where("status","==","open").limit(1).onSnapshot(snap=>{
-  if(snap.empty){ shiftNoSpan.textContent="No shift"; totalUSDEl.textContent="0.00"; totalMVREl.textContent="0.00"; return;}
+  if(snap.empty){ 
+    shiftNoSpan.textContent="No shift"; 
+    totalUSDEl.textContent="0.00"; 
+    totalMVREl.textContent="0.00"; 
+    return;
+  }
   const shiftData=snap.docs[0].data();
   const shiftNo = shiftData.shiftNo;
   const shiftName = shiftNo===1?"Morning":"Evening";
@@ -129,26 +501,51 @@ db.collection("shifts").where("status","==","open").limit(1).onSnapshot(snap=>{
 
   // Cash USD
   db.collection("payments").where("date","==",currentDate).where("shift","==",shiftName).where("paymentType","==","Cash").where("currency","==","USD")
-    .onSnapshot(paySnap=>{let t=0;paySnap.forEach(d=>{const p=d.data(); if(!p.voided) t+=Number(p.total||0)}); totalUSDEl.textContent=t.toFixed(2); updateSummary();});
+    .onSnapshot(paySnap=>{
+      let t=0;
+      paySnap.forEach(d=>{
+        const p=d.data(); 
+        if(!p.voided) t+=Number(p.total||0)
+      }); 
+      totalUSDEl.textContent=t.toFixed(2); 
+      updateSummary();
+    });
 
   // Cash MVR
   db.collection("payments").where("date","==",currentDate).where("shift","==",shiftName).where("paymentType","==","Cash").where("currency","==","MVR")
-    .onSnapshot(paySnap=>{let t=0;paySnap.forEach(d=>{const p=d.data(); if(!p.voided) t+=Number(p.total||0)}); totalMVREl.textContent=t.toFixed(2); updateSummary();});
+    .onSnapshot(paySnap=>{
+      let t=0;
+      paySnap.forEach(d=>{
+        const p=d.data(); 
+        if(!p.voided) t+=Number(p.total||0)
+      }); 
+      totalMVREl.textContent=t.toFixed(2); 
+      updateSummary();
+    });
 });
 
 // ===== Petty Cash =====
 const pettyUSDEl = document.getElementById("pettyUSD");
 const pettyMVREl = document.getElementById("pettyMVR");
+const cashierStatusEl = document.getElementById("cashierStatus");
+
 db.collection("pettyCash").limit(1).onSnapshot(snap=>{
   if(!snap.empty){
     const data = snap.docs[0].data();
     pettyUSDEl.textContent = Number(data.USD||0).toFixed(2);
     pettyMVREl.textContent = Number(data.MVR||0).toFixed(2);
+    
     // Set cashier button label according to current status if exists
     if(data.cashierStatus){
       currentStatus = data.cashierStatus;
       cashierBtn.textContent = currentStatus==="open"?"Close Cashier":"Open Cashier";
-    } else { cashierBtn.textContent = "Open Cashier"; }
+      cashierStatusEl.textContent = currentStatus.charAt(0).toUpperCase() + currentStatus.slice(1);
+      cashierBtn.classList.toggle("btn-danger", currentStatus==="open");
+      cashierBtn.classList.toggle("btn-success", currentStatus!=="open");
+    } else { 
+      cashierBtn.textContent = "Open Cashier";
+      cashierBtn.classList.add("btn-success");
+    }
     updateSummary();
   }
 });
@@ -190,7 +587,13 @@ function checkTotalsTally(){
 
   if( totalCashUSD + denomUSD === pettyUSD + pettyUSDCount && totalCashMVR + denomMVR === pettyMVR + pettyMVRCount ){
     cashierBtn.disabled = false;
-  } else { cashierBtn.disabled = true; }
+    cashierMsg.textContent = "Totals are balanced. You can proceed.";
+    cashierMsg.className = "status-message status-success";
+  } else { 
+    cashierBtn.disabled = true;
+    cashierMsg.textContent = "Totals don't match. Please reconcile before proceeding.";
+    cashierMsg.className = "status-message status-error";
+  }
 }
 
 // Watch totals
@@ -207,13 +610,25 @@ cashierBtn.addEventListener("click",()=>{
   const newStatus = currentStatus==="open"?"closed":"open";
   db.collection("pettyCash").doc("current").set({
     currentCashier: user.username,
-    cashierStatus: newStatus
+    cashierStatus: newStatus,
+    lastUpdated: new Date()
   },{merge:true}).then(()=>{
-    cashierMsg.textContent = "Cashier " + newStatus;
+    cashierMsg.textContent = "Cashier status updated to: " + newStatus;
+    cashierMsg.className = "status-message status-success";
     currentStatus = newStatus;
     cashierBtn.textContent = newStatus==="open"?"Close Cashier":"Open Cashier";
-  }).catch(err=>{console.error(err); cashierMsg.textContent="Error updating cashier status";});
+    cashierStatusEl.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+    cashierBtn.classList.toggle("btn-danger", newStatus==="open");
+    cashierBtn.classList.toggle("btn-success", newStatus!=="open");
+  }).catch(err=>{
+    console.error(err); 
+    cashierMsg.textContent="Error updating cashier status";
+    cashierMsg.className = "status-message status-error";
+  });
 });
+
+// Initial check
+setTimeout(checkTotalsTally, 1000);
 </script>
 </body>
 </html>
