@@ -598,13 +598,13 @@ window.addEventListener('load', function() {
       let results = [];
 
       // Query 1: Card (generic quick entries)
-      const cardSnap = await firebase.firestore().collection("bookings")
+      const cardSnap = await firebase.firestore().collection("payments")
         .where("paymentType", "==", "Card")
         .get();
       cardSnap.forEach(doc => results.push({ id: doc.id, ...doc.data() }));
 
       // Query 2: Non-cash but incomplete
-      const nonCashSnap = await firebase.firestore().collection("bookings")
+      const nonCashSnap = await firebase.firestore().collection("payments")
         .where("paymentType", "!=", "Cash")
         .get();
       nonCashSnap.forEach(doc => {
