@@ -1,92 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login</title>
-<script src="user.js"></script>
-<style>
-body {
-  font-family: Arial, sans-serif;
-  background: #f5f7fa;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-}
-.login-box {
-  background: #fff;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  width: 300px;
-}
-h2 {
-  text-align: center;
-  margin-bottom: 20px;
-  color: #4361ee;
-}
-input {
-  width: 100%;
-  padding: 10px;
-  margin: 8px 0;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-}
-button {
-  width: 100%;
-  padding: 10px;
-  border: none;
-  border-radius: 8px;
-  background: #28a745;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-}
-button:hover {
-  background: #218838;
-}
-.error {
-  color: red;
-  margin-top: 10px;
-  text-align: center;
-}
-</style>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      display: flex;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+    }
+    .login-box {
+      background: #fff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0px 0px 10px rgba(0,0,0,0.15);
+      width: 300px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #007BFF;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .error {
+      color: red;
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
+  <div class="login-box">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Username" />
+    <input type="password" id="password" placeholder="Password" />
+    <button onclick="login()">Login</button>
+    <div class="error" id="errorMsg"></div>
+  </div>
 
-<div class="login-box">
-  <h2>Login</h2>
-  <input type="text" id="username" placeholder="Username" required>
-  <input type="password" id="password" placeholder="Password" required>
-  <button onclick="login()">Login</button>
-  <div id="error" class="error"></div>
-</div>
+  <script src="user.js"></script>
+  <script>
+    function login() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const errorMsg = document.getElementById("errorMsg");
 
-<script>
-function login() {
-  const uname = document.getElementById("username").value.trim();
-  const pass = document.getElementById("password").value.trim();
-  const errorEl = document.getElementById("error");
+      const user = users.find(u => u.username === username && u.password === password);
 
-  // find matching user
-  const user = users.find(u => u.username === uname && u.password === pass);
-
-  if (user) {
-    // save session
-    sessionStorage.setItem("username", user.username);
-    sessionStorage.setItem("userName", user.name);
-    sessionStorage.setItem("userLevel", user.Level);
-    sessionStorage.setItem("rcNo", user.rcNo);
-    sessionStorage.setItem("WP", user.WP);
-
-    // redirect
-    window.location.href = "dashboard.html";
-  } else {
-    errorEl.textContent = "Invalid username or password!";
-  }
-}
-</script>
-
+      if (user) {
+        // Save logged-in user details in localStorage (for use in dashboard.html)
+        localStorage.setItem("loggedInUser", JSON.stringify(user));
+        window.location.href = "dashboard.html";
+      } else {
+        errorMsg.textContent = "Invalid username or password!";
+      }
+    }
+  </script>
 </body>
 </html>
