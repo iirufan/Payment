@@ -1,183 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard</title>
-<script src="fire2.js"></script> <!-- Firebase config -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<style>
-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; padding: 20px; }
-h1 { color: #4361ee; }
-.info { margin-bottom: 20px; }
-#notification { color: red; font-weight: bold; margin-bottom: 15px; }
-.buttons { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
-button { padding: 12px 20px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; color: white; background: #28a745; }
-button.disabled { background: #888; cursor: not-allowed; }
-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-th, td { padding: 10px; border: 1px solid #dee2e6; text-align: left; }
-th { background: #f8f9fa; }
-</style>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="fire2.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f4f6f9; }
+    h1 { color: #333; }
+    .info-box { background: #fff; padding: 15px; border-radius: 8px; width: 350px; margin-bottom: 20px; box-shadow: 0 0 8px rgba(0,0,0,0.1); }
+    .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; max-width: 400px; }
+    button { padding: 12px; border: none; border-radius: 8px; background: #007BFF; color: white; font-size: 15px; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    .notification { background: #ffcccc; padding: 10px; border: 1px solid red; border-radius: 6px; margin-top: 10px; }
+  </style>
 </head>
 <body>
+  <h1>Dashboard</h1>
+  <div class="info-box" id="userInfo"></div>
+  <div class="info-box">
+    <p><strong>Current Shift:</strong> <span id="currentShift">Loading...</span></p>
+    <p><strong>Total Transactions:</strong> <span id="totalTransactions">Loading...</span></p>
+    <div id="pendingNotification"></div>
+  </div>
 
-<h1>Dashboard</h1>
-<div class="info">
-  <p><strong>User:</strong> <span id="userName"></span></p>
-  <p><strong>Level:</strong> <span id="userLevel"></span></p>
-  <p><strong>Current Shift:</strong> <span id="currentShift"></span></p>
-  <p id="shiftStatus"></p>
-  <p id="notification"></p>
-  <p><strong>Total Payments:</strong> <span id="totalPayments">0</span></p>
-</div>
+  <div class="btns">
+    <button onclick="location.href='newpayment.html'">New Payment</button>
+    <button onclick="location.href='updatePayments.html'">Update Payment</button>
+    <button onclick="location.href='edit_payments.html'">Void</button>
+    <button onclick="location.href='shiftmanagement.html'">Shift Management</button>
+    <button onclick="location.href='cashiermanagement.html'">Cashier Management</button>
+    <button onclick="logout()">Logout</button>
+  </div>
 
-<div class="buttons">
-  <button id="openShiftBtn">New Payment</button>
-  <button id="closeShiftBtn">Report</button>
-  <button id="addPaymentBtn">Update Payments</button>
-  <button id="viewPaymentsBtn">Void</button>
-  <button id="reopenShiftBtn">Shift Management</button>
-  <button id="reopenShiftBtn">Cashier Manegement</button>
-  <button id="logoutBtn" style="background:#dc3545;">Logout</button>
-</div>
+  <script>
+    const user = JSON.parse(localStorage.getItem("loggedInUser"));
 
-<table id="paymentsTable">
-  <thead>
-    <tr>
-      <th>Payment ID</th>
-      <th>Amount</th>
-      <th>Method</th>
-      <th>Batch No</th>
-      <th>Approval Code</th>
-      <th>Status</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr><td colspan="6" style="text-align:center;">Loading payments...</td></tr>
-  </tbody>
-</table>
-
-<script>
-window.addEventListener('load', async () => {
-  if (typeof firebaseConfig === 'undefined') { alert("Firebase config not found in fire2.js"); return; }
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-
-  // User info from sessionStorage
-  const userName = sessionStorage.getItem("userName");
-  const userLevel = sessionStorage.getItem("userLevel");
-  const username = sessionStorage.getItem("username");
-
-  if (!userName || !userLevel) {
-    alert("You are not logged in!");
-    window.location.href = "login.html";
-  }
-
-  document.getElementById("userName").textContent = userName;
-  document.getElementById("userLevel").textContent = userLevel;
-
-  const currentShiftEl = document.getElementById("currentShift");
-  const shiftStatusEl = document.getElementById("shiftStatus");
-  const totalPaymentsEl = document.getElementById("totalPayments");
-  const paymentsTableBody = document.querySelector("#paymentsTable tbody");
-  const notificationEl = document.getElementById("notification");
-
-  const openShiftBtn = document.getElementById("openShiftBtn");
-  const closeShiftBtn = document.getElementById("closeShiftBtn");
-  const reopenShiftBtn = document.getElementById("reopenShiftBtn");
-  const logoutBtn = document.getElementById("logoutBtn");
-
-  let currentShift = null;
-
-  // Load current shift
-  async function loadCurrentShift() {
-    const snapshot = await db.collection("shifts").orderBy("shiftNo","desc").get();
-    const shifts = [];
-    snapshot.forEach(doc => shifts.push({id:doc.id, ...doc.data()}));
-
-    currentShift = shifts.find(s => s.status==="open") || null;
-    if(currentShift){
-      currentShiftEl.textContent = currentShift.shiftNo;
-      shiftStatusEl.textContent = `Status: ${currentShift.status}`;
-      openShiftBtn.disabled = true;
-      closeShiftBtn.disabled = false;
+    if (user) {
+      document.getElementById("userInfo").innerHTML = `
+        <p><strong>Username:</strong> ${user.username}</p>
+        <p><strong>Level:</strong> ${user.Level}</p>
+      `;
     } else {
-      currentShiftEl.textContent = "-";
-      shiftStatusEl.textContent = "No shift open";
-      openShiftBtn.disabled = false;
-      closeShiftBtn.disabled = true;
+      window.location.href = "login.html";
     }
-  }
 
-  // Load payments
-  async function loadPayments() {
-    const snapshot = await db.collection("payments").orderBy("timestamp","desc").get();
-    let total = 0;
-    let pending = false;
-    paymentsTableBody.innerHTML = "";
-    snapshot.forEach(doc => {
-      const p = doc.data();
-      const status = (p.method==="Card" && (!p.batchNo || !p.approvalCode)) ? "Pending Update" : "OK";
-      if(status==="Pending Update") pending = true;
-      total += p.amount || 0;
-      paymentsTableBody.innerHTML += `<tr>
-        <td>${doc.id}</td>
-        <td>${p.amount || 0}</td>
-        <td>${p.method}</td>
-        <td>${p.batchNo || ""}</td>
-        <td>${p.approvalCode || ""}</td>
-        <td>${status}</td>
-      </tr>`;
+    function logout() {
+      localStorage.removeItem("loggedInUser");
+      window.location.href = "login.html";
+    }
+
+    // 🔹 Fetch current shift from Firebase
+    db.ref("shifts/current").on("value", snapshot => {
+      const shift = snapshot.val();
+      document.getElementById("currentShift").textContent = shift ? shift : "No shift open";
     });
-    totalPaymentsEl.textContent = total;
-    notificationEl.textContent = pending ? "⚠ Some card payments are missing batch number or approval code!" : "";
-  }
 
-  // Buttons
-  openShiftBtn.addEventListener("click", async () => {
-    await db.collection("shifts").add({
-      shiftNo: currentShift ? currentShift.shiftNo+1 : 1,
-      status: "open",
-      user: username,
-      startTime: firebase.firestore.FieldValue.serverTimestamp(),
-      endTime: null
+    // 🔹 Fetch transactions
+    db.ref("transactions").on("value", snapshot => {
+      const data = snapshot.val();
+      if (data) {
+        const transactions = Object.values(data);
+        document.getElementById("totalTransactions").textContent = transactions.length;
+
+        // Pending updates = card payments with missing approvalCode OR batchNo
+        const pending = transactions.filter(t => 
+          t.paymentMethod === "Card" && (!t.approvalCode || !t.batchNo)
+        );
+
+        const notif = document.getElementById("pendingNotification");
+        if (pending.length > 0) {
+          notif.innerHTML = `<div class="notification">⚠️ ${pending.length} pending card updates!</div>`;
+        } else {
+          notif.innerHTML = "";
+        }
+      } else {
+        document.getElementById("totalTransactions").textContent = "0";
+      }
     });
-    await loadCurrentShift();
-  });
-
-  closeShiftBtn.addEventListener("click", async () => {
-    if(!currentShift) return;
-    await db.collection("shifts").doc(currentShift.id).update({
-      status:"closed",
-      endTime: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    await loadCurrentShift();
-  });
-
-  reopenShiftBtn.addEventListener("click", async () => {
-    if(!currentShift) return alert("No shift to reopen!");
-    if(userLevel!=="Supervisor") return alert("Only Supervisor can reopen shifts!");
-    await db.collection("shifts").doc(currentShift.id).update({
-      status:"open"
-    });
-    await loadCurrentShift();
-  });
-
-  logoutBtn.addEventListener("click", () => {
-    sessionStorage.clear();
-    window.location.href="login.html";
-  });
-
-  // Initial load
-  await loadCurrentShift();
-  await loadPayments();
-
-  // Live updates
-  db.collection("shifts").orderBy("shiftNo").onSnapshot(loadCurrentShift);
-  db.collection("payments").orderBy("timestamp").onSnapshot(loadPayments);
-});
-</script>
-
+  </script>
 </body>
 </html>
