@@ -1,334 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Login System</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-            padding: 20px;
-        }
-        
-        .login-container {
-            width: 100%;
-            max-width: 450px;
-            background: #fff;
-            border-radius: 15px;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
-            animation: fadeIn 0.5s ease-out;
-        }
-        
-        .login-header {
-            background: #4a6cf7;
-            color: white;
-            text-align: center;
-            padding: 25px;
-            position: relative;
-        }
-        
-        .login-header h2 {
-            font-weight: 600;
-            font-size: 24px;
-        }
-        
-        .login-header p {
-            margin-top: 8px;
-            font-size: 14px;
-            opacity: 0.9;
-        }
-        
-        .login-form {
-            padding: 30px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-            position: relative;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #555;
-            font-size: 14px;
-        }
-        
-        .input-icon {
-            position: relative;
-        }
-        
-        .input-icon i {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #777;
-        }
-        
-        .input-icon input {
-            width: 100%;
-            padding: 12px 15px 12px 45px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
-        
-        .input-icon input:focus {
-            border-color: #4a6cf7;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.1);
-        }
-        
-        .btn {
-            width: 100%;
-            padding: 14px;
-            background: #4a6cf7;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.3s, transform 0.2s;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .btn:hover {
-            background: #3a5cd8;
-            transform: translateY(-2px);
-        }
-        
-        .btn:active {
-            transform: translateY(0);
-        }
-        
-        .error-message {
-            color: #e74c3c;
-            text-align: center;
-            margin-top: 15px;
-            font-size: 14px;
-            min-height: 20px;
-            padding: 10px;
-            background: #fdeded;
-            border-radius: 6px;
-            display: none;
-        }
-        
-        .success-message {
-            color: #27ae60;
-            text-align: center;
-            margin-top: 15px;
-            font-size: 14px;
-            min-height: 20px;
-            padding: 10px;
-            background: #effaf1;
-            border-radius: 6px;
-            display: none;
-        }
-        
-        .additional-options {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-            font-size: 14px;
-        }
-        
-        .remember-me {
-            display: flex;
-            align-items: center;
-        }
-        
-        .remember-me input {
-            margin-right: 5px;
-        }
-        
-        .forgot-password {
-            color: #4a6cf7;
-            text-decoration: none;
-        }
-        
-        .forgot-password:hover {
-            text-decoration: underline;
-        }
-        
-        .footer {
-            text-align: center;
-            margin-top: 20px;
-            color: #777;
-            font-size: 13px;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
-        }
-        
-        @media (max-width: 480px) {
-            .login-container {
-                max-width: 100%;
-            }
-            
-            .additional-options {
-                flex-direction: column;
-                gap: 10px;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login</title>
+<script src="user.js"></script>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f7fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+.login-box {
+  background: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  width: 300px;
+}
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #4361ee;
+}
+input {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+button {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #28a745;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+button:hover {
+  background: #218838;
+}
+.error {
+  color: red;
+  margin-top: 10px;
+  text-align: center;
+}
+</style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-header">
-            <h2>Secure Login Portal</h2>
-            <p>Enter your credentials to access the dashboard</p>
-        </div>
-        <form class="login-form" id="loginForm">
-            <div class="form-group">
-                <label for="username">Username</label>
-                <div class="input-icon">
-                    <i class="fas fa-user"></i>
-                    <input type="text" id="username" name="username" required autocomplete="username" placeholder="Enter your username">
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <div class="input-icon">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Enter your password">
-                </div>
-            </div>
-            <button type="submit" class="btn" id="loginBtn">
-                <span id="btnText">Login</span>
-                <i class="fas fa-spinner fa-spin" id="btnSpinner" style="display: none;"></i>
-            </button>
-            <div class="error-message" id="errorMessage"></div>
-            <div class="success-message" id="successMessage"></div>
-            
-            <div class="additional-options">
-                <div class="remember-me">
-                    <input type="checkbox" id="rememberMe">
-                    <label for="rememberMe">Remember me</label>
-                </div>
-                <a href="#" class="forgot-password">Forgot password?</a>
-            </div>
-        </form>
-        <div class="footer">
-            <p>© 2023 Secure Login System. All rights reserved.</p>
-        </div>
-    </div>
 
-    <!-- Reference to your external user.js file -->
-    <script src="user.js"></script>
+<div class="login-box">
+  <h2>Login</h2>
+  <input type="text" id="username" placeholder="Username" required>
+  <input type="password" id="password" placeholder="Password" required>
+  <button onclick="login()">Login</button>
+  <div id="error" class="error"></div>
+</div>
 
-    <script>
-        // Main application logic
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const errorMessage = document.getElementById('errorMessage');
-            const successMessage = document.getElementById('successMessage');
-            const loginBtn = document.getElementById('loginBtn');
-            const btnText = document.getElementById('btnText');
-            const btnSpinner = document.getElementById('btnSpinner');
-            
-            // Reset messages
-            errorMessage.style.display = 'none';
-            successMessage.style.display = 'none';
-            
-            // Show loading state
-            btnText.textContent = 'Authenticating...';
-            btnSpinner.style.display = 'inline-block';
-            loginBtn.disabled = true;
-            
-            // Check if users array is available from user.js
-            if (typeof users === 'undefined') {
-                errorMessage.textContent = 'Error: User database not loaded. Please check user.js file.';
-                errorMessage.style.display = 'block';
-                
-                // Reset button state
-                btnText.textContent = 'Login';
-                btnSpinner.style.display = 'none';
-                loginBtn.disabled = false;
-                return;
-            }
-            
-            // Simulate network delay
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Validate credentials against user.js data
-            const user = users.find(u => u.username === username && u.password === password);
-            
-            if (user) {
-                // Successful login
-                successMessage.textContent = `Login successful! Welcome back, ${user.name}.`;
-                successMessage.style.display = 'block';
-                
-                // Store user data in session storage
-                sessionStorage.setItem('currentUser', JSON.stringify(user));
-                
-                // Redirect to dashboard after a brief delay
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 1500);
-            } else {
-                // Failed login
-                errorMessage.textContent = 'Invalid username or password. Please try again.';
-                errorMessage.style.display = 'block';
-                
-                // Add shake animation to form
-                document.getElementById('loginForm').style.animation = 'shake 0.5s';
-                setTimeout(() => {
-                    document.getElementById('loginForm').style.animation = '';
-                }, 500);
-                
-                // Clear password field
-                document.getElementById('password').value = '';
-                
-                // Reset button state
-                btnText.textContent = 'Login';
-                btnSpinner.style.display = 'none';
-                loginBtn.disabled = false;
-            }
-        });
-        
-        // Demo credentials helper (optional - remove in production)
-        document.addEventListener('DOMContentLoaded', function() {
-            // Only show demo info if users array is available
-            if (typeof users !== 'undefined' && users.length > 0) {
-                const footer = document.querySelector('.footer');
-                const demoInfo = document.createElement('div');
-                demoInfo.innerHTML = `<p style="margin-top: 10px; font-size: 12px; color: #999;">
-                    Demo: Try ${users[0].username}/${users[0].password} or other credentials from user.js
-                </p>`;
-                footer.appendChild(demoInfo);
-            }
-        });
-    </script>
+<script>
+function login() {
+  const uname = document.getElementById("username").value.trim();
+  const pass = document.getElementById("password").value.trim();
+  const errorEl = document.getElementById("error");
+
+  // find matching user
+  const user = users.find(u => u.username === uname && u.password === pass);
+
+  if (user) {
+    // save session
+    sessionStorage.setItem("username", user.username);
+    sessionStorage.setItem("userName", user.name);
+    sessionStorage.setItem("userLevel", user.Level);
+    sessionStorage.setItem("rcNo", user.rcNo);
+    sessionStorage.setItem("WP", user.WP);
+
+    // redirect
+    window.location.href = "dashboard.html";
+  } else {
+    errorEl.textContent = "Invalid username or password!";
+  }
+}
+</script>
+
 </body>
 </html>
