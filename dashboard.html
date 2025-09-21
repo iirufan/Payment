@@ -76,7 +76,7 @@ button { padding: 8px 12px; margin-top: 5px; }
   <h2>Cashier Status</h2>
   <p>Logged in User: <span id="sidebarUsername">Loading...</span></p>
   <p>Level: <span id="sidebarLevel">Loading...</span></p>
-  <button id="cashierBtn" disabled>Open / Close Cashier</button>
+  <button id="cashierBtn" disabled>Loading...</button>
   <p id="cashierMsg"></p>
 </div>
 
@@ -144,6 +144,11 @@ db.collection("pettyCash").limit(1).onSnapshot(snap=>{
     const data = snap.docs[0].data();
     pettyUSDEl.textContent = Number(data.USD||0).toFixed(2);
     pettyMVREl.textContent = Number(data.MVR||0).toFixed(2);
+    // Set cashier button label according to current status if exists
+    if(data.cashierStatus){
+      currentStatus = data.cashierStatus;
+      cashierBtn.textContent = currentStatus==="open"?"Close Cashier":"Open Cashier";
+    } else { cashierBtn.textContent = "Open Cashier"; }
     updateSummary();
   }
 });
@@ -163,7 +168,7 @@ function updateSummary(){
   document.getElementById("grandTotalMVR").textContent = (totalCashMVR + totalPettyMVR).toFixed(2);
 }
 
-// ===== Logged-in User (from login page) =====
+// ===== Logged-in User =====
 const user = JSON.parse(localStorage.getItem("loggedInUser")) || {username:"Unknown", Level:"User"};
 document.getElementById("sidebarUsername").textContent = user.username;
 document.getElementById("sidebarLevel").textContent = user.Level;
